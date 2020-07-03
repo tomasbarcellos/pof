@@ -1,0 +1,60 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+library(pof)
+```
+
+# pof
+
+<!-- badges: start -->
+[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://www.tidyverse.org/lifecycle/#experimental)
+<!-- badges: end -->
+
+O pacote permite baixar e ler dados da POF.
+
+## Installation
+
+O Pacote ainda não está no CRAN, apenas Github.
+
+``` r
+remotes::install_github("tomasbarcellos/pof")
+```
+
+## Example
+
+O download funciona apenas para os anos de 2003, 2009 e 2018, por enquanto.
+
+```{r example, eval=FALSE}
+library(pof)
+downaload_pof(2018)
+unzip_pof(2018)
+```
+
+Com os dados baixamos, o pacote oferece uma função para ler cada tabela
+da pesquisa. 
+
+> Por enquanto os scripts de leitura apenas reproduzem as instruções
+do IBGE para o ano de 2018.
+
+Por exemplo, é possível.
+
+```{r}
+aluguel <- ler_aluguel(2018)
+dplyr::glimpse(aluguel)
+
+domicilios <- ler_domicilio(2018)
+dplyr::glimpse(domicilios)
+```
+

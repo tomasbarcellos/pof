@@ -5,7 +5,7 @@ ler_pof <- function(arquivo, tamanhos, nomes) {
   )
 }
 
-
+#' @export
 ler_morador <- function(ano) {
   stopifnot(ano %in% c(2003, 2009, 2018))
 
@@ -32,6 +32,7 @@ ler_morador <- function(ano) {
 }
 # morad <- ler_morador(2018)
 
+#' @export
 ler_desp_col <- function(ano) {
   stopifnot(ano %in% c(2003, 2009, 2018))
 
@@ -51,6 +52,7 @@ ler_desp_col <- function(ano) {
 }
 # desp_col <- ler_desp_col(2018)
 
+#' @export
 ler_cad_col <- function(ano) {
   stopifnot(ano %in% c(2003, 2009, 2018))
 
@@ -69,6 +71,7 @@ ler_cad_col <- function(ano) {
 }
 # cad_col <- ler_cad_col(2018)
 
+#' @export
 ler_desp_ind <- function(ano) {
   stopifnot(ano %in% c(2003, 2009, 2018))
 
@@ -87,6 +90,7 @@ ler_desp_ind <- function(ano) {
 }
 # desp_ind <- ler_desp_ind(2018)
 
+#' @export
 ler_aluguel <- function(ano) {
   stopifnot(ano %in% c(2003, 2009, 2018))
 
@@ -104,6 +108,7 @@ ler_aluguel <- function(ano) {
 }
 # alug <- ler_aluguel(2018)
 
+#' @export
 ler_rend_trab <- function(ano) {
   stopifnot(ano %in% c(2003, 2009, 2018))
 
@@ -127,6 +132,7 @@ ler_rend_trab <- function(ano) {
 }
 # trab <- ler_rend_trab(2018)
 
+#' @export
 ler_rend_outros <- function(ano) {
   stopifnot(ano %in% c(2003, 2009, 2018))
 
@@ -145,6 +151,7 @@ ler_rend_outros <- function(ano) {
 }
 # outros <- ler_rend_outros(2018)
 
+#' @export
 ler_domicilio <- function(ano) {
   stopifnot(ano %in% c(2003, 2009, 2018))
 

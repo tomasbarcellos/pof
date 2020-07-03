@@ -21,6 +21,7 @@ criar_link <-  function(ano) {
   )
 }
 
+#' @export
 downaload_pof <- function(ano) {
   stopifnot(ano %in% c(2003, 2009, 2018))
   links <- criar_link(ano)
@@ -34,6 +35,7 @@ downaload_pof <- function(ano) {
   download.file(links, glue::glue("dados/{ano}/{arqs}"))
 }
 
+#' @export
 unzip_pof <- function(ano) {
   dir(glue::glue("dados/{ano}"), full.names = TRUE) %>%
     stringr::str_subset("\\.zip$") %>%
