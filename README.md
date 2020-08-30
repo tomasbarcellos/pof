@@ -9,7 +9,9 @@
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://www.tidyverse.org/lifecycle/#experimental)
 <!-- badges: end -->
 
-O pacote permite baixar e ler dados da POF.
+O pacote permite baixar e ler dados da POF. Por enquanto o pacote contém
+apenas os dados divulgados em abril. Não inclui, portanto, dados sobre
+alimentação e dieta. Isso será incluído em breve.
 
 ## Installation
 
@@ -104,4 +106,75 @@ dplyr::glimpse(domicilios)
 #> $ V0221             <dbl> 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3, 3, 3…
 #> $ PESO              <dbl> 272.8067, 272.8067, 272.8067, 272.8067, 272.80…
 #> $ PESO_FINAL        <dbl> 372.9845, 372.9845, 372.9845, 372.9845, 372.98…
+```
+
+# Adicionando chaves
+
+O código abaixo adiciona chaves nas tabelas para permitir vinculá-las.
+
+``` r
+# Morador - Nível pessoa
+morador <- pof::ler_morador(2018) %>% 
+  janitor::clean_names() %>% 
+  mutate(
+    cod_uc = paste0(cod_upa, num_dom, num_uc),
+    cod_pessoa = paste0(cod_uc, cod_informante)
+  )
+
+# Despesa coletiva - Nível despesa
+desp_coletiva <- pof::ler_desp_col(2018) %>% 
+  janitor::clean_names() %>% 
+  mutate(
+    cod_uc = paste0(cod_upa, num_dom, num_uc),
+    cod_despesa = paste0(cod_uc, quadro, seq)
+  )
+
+# Caderneta coletiva - Nível despesa domicilio
+cad_coletiva <- pof::ler_cad_col(2018) %>% 
+  janitor::clean_names() %>% 
+  mutate(
+    cod_uc = paste0(cod_upa, num_dom, num_uc),
+    cod_despesa = paste0(cod_uc, quadro, seq)
+  )
+
+# Despesa individual - Nível despesa individual
+despesa_individual <- pof::ler_desp_ind(2018) %>% 
+  janitor::clean_names() %>% 
+  mutate(
+    cod_uc = paste0(cod_upa, num_dom, num_uc),
+    cod_pessoa = paste0(cod_uc, cod_informante),
+    cod_despesa = paste0(cod_pessoa, quadro, seq)
+  )
+
+# Aluguel - Nível domicílio
+aluguel <- pof::ler_aluguel(2018) %>% 
+  janitor::clean_names() %>% 
+  mutate(
+    cod_uc = paste0(cod_upa, num_dom, num_uc),
+  )
+
+# Rendimento - Nível rendimento
+rendimentos_trabalho <- pof::ler_rend_trab(2018) %>% 
+  janitor::clean_names() %>% 
+  mutate(
+    cod_uc = paste0(cod_upa, num_dom, num_uc),
+    cod_pessoa = paste0(cod_uc, cod_informante),
+    cod_rendimento = paste0(cod_pessoa, quadro, sub_quadro, seq),
+  )
+
+# Rendimento - Nível rendimento
+rendimentos_outros <- pof::ler_rend_outros(2018) %>% 
+  janitor::clean_names() %>% 
+  mutate(
+    cod_uc = paste0(cod_upa, num_dom, num_uc),
+    cod_pessoa = paste0(cod_uc, cod_informante),
+    cod_rendimento = paste0(cod_pessoa, quadro, seq),
+  ) 
+
+# Domicílio - Nível domicílio
+domicilios <- pof::ler_domicilio(2018) %>% 
+  janitor::clean_names() %>% 
+  mutate(
+    cod_uc = paste0(cod_upa, num_dom, num_uc)
+  )
 ```
