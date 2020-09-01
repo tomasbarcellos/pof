@@ -13,3 +13,7 @@ RoxygenNote: 7.1.0
 Imports: 
     magrittr,
     glue
+Suggests: 
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr

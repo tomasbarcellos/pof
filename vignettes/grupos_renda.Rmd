@@ -1,0 +1,124 @@
+---
+title: "grupos_renda"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{grupos_renda}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(pof)
+library(tidyverse)
+setwd("../")
+# v9001 é código do rendimento
+produtos <- readxl::read_excel("dados/2018/Cadastro de Produtos.xls", 
+                               col_names = c("quadro", "v9001",
+                                             "descricao_produto"), 
+                               skip = 1) 
+
+# Rendimento - Nível rendimento
+rendimentos_trabalho <- pof::ler_rend_trab(2018) %>% 
+  janitor::clean_names() %>% 
+  mutate(
+    cod_uc = paste0(cod_upa, num_dom, num_uc),
+    cod_pessoa = paste0(cod_uc, cod_informante),
+    cod_rendimento = paste0(cod_pessoa, quadro, sub_quadro, seq),
+  )
+  
+# Rendimento - Nível rendimento
+rendimentos_outros <- pof::ler_rend_outros(2018) %>% 
+  janitor::clean_names() %>% 
+  mutate(
+    cod_uc = paste0(cod_upa, num_dom, num_uc),
+    cod_pessoa = paste0(cod_uc, cod_informante),
+    cod_rendimento = paste0(cod_pessoa, quadro, seq),
+  ) 
+
+rendas_uc_trab <- rendimentos_trabalho %>% 
+  filter(v8500 != 9999999) %>% 
+  group_by(cod_uc, v9001 = as.character(v9001)) %>% 
+  summarise(rendimento = sum(v8500, na.rm = TRUE), 
+            peso_final = first(peso_final),
+            renda_total = first(renda_total)) 
+
+rendas_uc_outros <- rendimentos_outros %>% 
+  filter(v8500 != 9999999) %>% 
+  group_by(cod_uc, v9001 = as.character(v9001)) %>% 
+  summarise(rendimento = sum(v8500, na.rm = TRUE), 
+            peso_final = first(peso_final),
+            renda_total = first(renda_total)) 
+
+rendas_uc <- rendas_uc_outros %>% 
+  bind_rows(rendas_uc_trab) %>%
+  arrange(cod_uc, desc(rendimento)) %>% 
+  left_join(produtos) %>% 
+  mutate(partic = round(rendimento * 100 / renda_total)) %>% 
+  ungroup()
+
+rendas_uc %>% 
+  group_by(descricao_produto) %>% 
+  summarise(renda = sum(rendimento, na.rm = TRUE)) %>% 
+  mutate(perc = renda * 100/ sum(renda)) %>% 
+  arrange(-perc) %>% 
+  mutate(perc_acu = cumsum(perc)) %>% 
+  print(n = 30)
+
+dic_mv <- tribble(
+  ~v9001, ~tipo,
+  5300301, "cv",
+  5500201, "cv",
+  5300601, "cv",
+  5500101, "cv",
+  5400401, "mv", 
+  5500301, "mv",
+  5400101, "mv",
+  5600101, NA_character_,
+  5300401, "mv",
+  5700101, NA_character_,
+  5300101, "cv",
+  5501001, NA_character_,
+  5400501, "mv",
+  5500401, "mv",
+  5401601, "cv",
+  5500801, NA_character_,
+  5401701, "cv",
+  5401101, NA_character_,
+  5401401, "mv",
+  5501601, NA_character_,
+  5300501, "mv",
+  5400601, "mv",
+  5400201, "mv",
+  5401301, NA_character_,
+  5500501, "mv",
+  5501701, NA_character_,
+  5400901, "mv",
+  5501501, "cv",
+  5500901, "mv",
+  5502501, NA_character_,
+) %>% 
+  mutate(v9001 = as.character(v9001))
+
+rendas_uc %>% 
+  left_join(dic_mv) %>% 
+  group_by(cod_uc, tipo) %>% 
+  summarise(renda = sum(rendimento))
+
+
+```
+
+
+```{r echo = FALSE, eval = FALSE}
+# cad_coletiva_uc <- cad_coletiva %>% 
+#   group_by(cod_uc) %>% 
+#   select(starts_with("v"), renda_total) %>% 
+#   summarise_all(sum, na.rm = TRUE)
+```
+
