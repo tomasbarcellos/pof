@@ -9,7 +9,7 @@ vignette: >
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
-  collapse = TRUE,
+  collapse = TRUE, warning = FALSE, message = FALSE,
   comment = "#>"
 )
 ```
@@ -106,10 +106,179 @@ dic_mv <- tribble(
 ) %>% 
   mutate(v9001 = as.character(v9001))
 
+
 rendas_uc %>% 
   left_join(dic_mv) %>% 
   group_by(cod_uc, tipo) %>% 
   summarise(renda = sum(rendimento))
+
+
+rendas_uc %>% 
+  group_by(cod_uc) %>% 
+  summarise(rendimento = max(rendimento),
+            rendimento2 = cut(rendimento, c(-Inf, 1000, 2000, 5000, 10000, Inf), c("Mis", "Massa", "B", "M", "A"))) %>% 
+  count(rendimento2) %>% 
+  mutate(prop = n / sum(n))
+
+rendimentos <- rendimentos_trabalho %>% 
+  bind_rows(rendimentos_outros, .id = "tipo") %>% 
+  filter(v8500 != 9999999) %>% 
+  mutate(tipo = c("trabalho", "outros")[as.integer(tipo)]) %>% 
+  group_by(cod_uc, tipo) %>% 
+  summarise(rendimento = sum(v8500, na.rm = TRUE), 
+            peso_final = first(peso_final),
+            renda_total = first(renda_total)) 
+
+unidades <- rendimentos %>% 
+  select(-renda_total) %>% 
+  ungroup() %>% 
+  pivot_wider(names_from = tipo, values_from = rendimento, 
+              values_fill = list(rendimento = 0)) %>% 
+  mutate(total = outros + trabalho,
+         p_outros = outros/total,
+         p_trabalho = trabalho/total)
+
+
+unidades %>% 
+  arrange(desc(p_trabalho)) %>% 
+  group_by(classe = ifelse(p_trabalho <= 0.1, "baixa", "alta")) %>%
+  summarise_if(is.numeric, mean)
+
+grupos <- kmeans(unidades$p_trabalho, c(0.1, 0.9))
+grupos$cluster %>% table()
+grupos$centers
+
+grupos2 <- unidades %>% 
+  select(p_trabalho, trabalho) %>% 
+  kmeans(2)
+
+grupos2$cluster %>% table()
+grupos2$centers
+grupos2$totss
+
+unidades %>% 
+  mutate(grupo1 = as.factor(grupos$cluster),
+         grupo2 = as.factor(grupos2$cluster)) %>% 
+  filter(total < 100000) %>% 
+  ggplot(aes(p_trabalho * 100, total, col = grupo1)) + 
+  geom_point(alpha = 0.3, size = 0.3) + 
+  geom_vline(xintercept = c(80, 90, 95), lty = 1:3) +
+  theme_classic()
+
+ggplot(unidades, aes(100 * p_outros)) + 
+  geom_density() + 
+  geom_vline(xintercept = c(80, 90, 95), lty = 1:3) +
+  labs(title = "Percentual da renda de outros", x = "")
+
+ggplot(unidades %>% filter(total < 100000), 
+       aes(100 * p_trabalho, total)) + 
+  geom_point(alpha = 0.5, shape = ".") + 
+  geom_vline(xintercept = c(80, 90, 95), lty = 1:3) +
+  labs(title = "Percentual da renda do trabalho x renda total", 
+       x = "", y = "renda total") + 
+  theme_classic()
+
+ggplot(unidades %>% filter(total < 100000), 
+       aes(100 * p_trabalho, trabalho)) + 
+  geom_point(alpha = 0.5, shape = ".") + 
+  geom_vline(xintercept = c(80, 90, 95), lty = 1:3) +
+  labs(title = "Percentual da renda do trabalho x renda trabalho",
+       x = "", y = "renda do trabalho") + 
+  theme_classic()
+
+ggplot(unidades %>% filter(total < 100000), 
+       aes(100 * p_trabalho, outros)) + 
+  geom_point(alpha = 0.5, shape = ".") + 
+  geom_vline(xintercept = c(80, 90, 95), lty = 1:3) +
+  labs(title = "Percentual da renda do trabalho x renda outros",
+       x = "", y = "renda do outros") + 
+  theme_classic()
+
+categs_outros <- rendas_uc_outros %>% 
+  ungroup() %>% 
+  # count(v9001, sort = T) %>% 
+  # select(v9001) %>%
+  group_by(v9001) %>% 
+  summarise(total = sum(rendimento)) %>%
+  arrange(desc(total)) %>% 
+  mutate(tipo = "outros") %>% 
+  left_join(produtos)
+
+categs_trab <- rendas_uc_trab %>% 
+  ungroup() %>% 
+  # count(v9001, sort = T) %>% 
+  # select(v9001) %>%
+  group_by(v9001) %>% 
+  summarise(total = sum(rendimento)) %>%
+  arrange(desc(total)) %>% 
+  mutate(tipo = "trabalho") %>% 
+  left_join(produtos)
+
+
+dicionario <- read_csv2("codigos.csv", na = "-") %>% 
+  mutate(v9001 = as.character(v9001))
+
+rendas_cv_mv <- rendas_uc_outros %>% 
+  bind_rows(rendas_uc_trab) %>% 
+  # left_join(dicionario, by = "v9001")
+  left_join(dicionario %>% mutate(tipo = c(tipo[1:37], "cv", tipo[39:41])))
+
+rendas_cv_mv %>% 
+  filter(str_detect(descricao_produto, "VENDA DE|POUP|EMPRESTIMO", negate = TRUE)) %>% 
+  group_by(tipo) %>% 
+  summarise(qtd = n(),
+            peso = sum(peso_final),
+            massa = sum(rendimento),
+            media = weighted.mean(rendimento, peso_final)) %>% 
+  mutate(massa_peso = massa * (peso  / sum(peso)),
+         media_peso = massa / peso)
+
+
+unidade_cv_mv <- rendas_cv_mv %>% 
+  mutate(tipo = replace_na(tipo, "x")) %>% 
+  group_by(cod_uc, tipo, peso_final) %>% 
+  summarise(rendimento = sum(rendimento)) %>% 
+  pivot_wider(names_from = tipo, values_from = rendimento, 
+              values_fill = list(rendimento = 0)) %>% 
+  mutate(total = cv + mv + x,
+         tx_cv = cv / total) %>% 
+  ungroup()
+
+grupos3 <- unidade_cv_mv %>% 
+  select(total, tx_cv) %>% 
+  mutate_all(scale) %>% 
+  kmeans(2)
+
+
+unidade_cv_mv %>% 
+  ggplot(aes(tx_cv)) + 
+  geom_density() + 
+  geom_vline(xintercept = c(0.1, 0.15, 0.2), lty = 2:4)
+
+unidade_cv_mv %>%
+  mutate(grupo = grupos3$cluster) %>% 
+  ggplot(aes(cv, total)) +
+  geom_point(size = 0.3, alpha = 0.1, aes(col = factor(grupo))) + 
+  scale_y_log10() +
+  scale_x_log10() +
+  theme_classic()
+
+unidade_cv_mv %>%
+  mutate(grupo = grupos3$cluster,
+         grupo2 = tx_cv > 0.15) %>% 
+  ggplot(aes(factor(grupo2), mv, fill = factor(grupo2))) +
+  geom_boxplot() + 
+  scale_y_log10()
+
+rendas_uc_outros %>% 
+  summarise(rendimento = max(rendimento),
+            rendimento2 = cut(rendimento,
+                              c(0, 1000, 2000, 5000, 10000, Inf), 
+                              c("Mis", "Massa", "B", "M", "A")),
+            peso = sum(peso_final)) %>% 
+  group_by(rendimento2) %>% 
+  summarise(n = n(), peso = sum(peso)) %>% 
+  mutate(prop = n / sum(n), prop2 = peso/sum(peso))
 
 
 ```

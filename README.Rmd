@@ -128,7 +128,7 @@ rendimentos_outros <- pof::ler_rend_outros(2018) %>%
 domicilios <- pof::ler_domicilio(2018) %>% 
   janitor::clean_names() %>% 
   mutate(
-    cod_uc = paste0(cod_upa, num_dom, num_uc)
+    cod_dom = paste0(cod_upa, num_dom)
   )
 ```
 
