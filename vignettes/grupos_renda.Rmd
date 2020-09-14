@@ -291,3 +291,55 @@ rendas_uc_outros %>%
 #   summarise_all(sum, na.rm = TRUE)
 ```
 
+# usando tradutor
+
+```{r}
+# Tudo errado.
+# trabalho em progresso
+tradutor_2018 <- ler_tradutor_rendimento(2018) %>% 
+  select(codigo, tipo_renda = descricao_3)
+
+
+rendimento_prof <- rendimentos_trabalho %>% 
+  bind_rows(rendimentos_outros) %>% 
+  mutate(codigo = str_sub(v9001, 1, 5)) %>% 
+  left_join(tradutor_2018, by = "codigo") %>% 
+  group_by(cod_uc, cod_pessoa, tipo_renda, v5302, v5303, v5304) %>% 
+  summarise(rendimento = sum(v8500, na.rm = TRUE),
+            peso_final = first(peso_final))
+
+rend_categs <- rendimento_prof %>% 
+  ungroup() %>% 
+  mutate(forma = case_when(
+    v5302 == 1 ~ "cv",
+    v5302 == 2 ~ "mv",
+    v5302 == 3 ~ "cv",
+    v5302 == 4 & v5303 == 1 ~ "mv", # setor estatutário
+    # supoe não ter informalidade no setor publico
+    v5302 == 4 & v5304 == 1 ~ "cv", # trabalhador de estatal
+    v5302 == 5 ~ "cv/mv",
+    v5302 == 6 ~ "cv/mv",
+    v5302 == 7 ~ "cv", # trab não remunerado ?
+    TRUE ~ NA_character_,
+  ))
+
+rend_categs %>% 
+  group_by(forma) %>% 
+  summarise(rendimento = sum(rendimento))
+todos_rendimentos <- rendimentos_trabalho %>% 
+  bind_rows(rendimentos_outros)
+
+todos_rendimentos %>% 
+  mutate(codigo = str_sub(v9001, 1, 5)) %>% 
+  left_join(tradutor_2018, by = "codigo") %>% 
+  filter(v8500 != 9999999) %>%
+  group_by(cod_uc, tipo_renda) %>%
+  summarise(v8500 = sum(v8500, na.rm = TRUE), 
+            peso_final = first(peso_final)) %>% 
+  # ungroup() %>% 
+  group_by(tipo_renda) %>%
+  summarise(rendimento = weighted.mean(v8500, peso_final, na.rm = TRUE))
+  # summarise(rendimento = sum(v8500, na.rm = TRUE)) %>% 
+  # mutate(prop = rendimento * 100 / sum(rendimento))
+```
+
