@@ -1,0 +1,102 @@
+---
+title: "rendimentos"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{rendimentos}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(pof)
+library(tidyverse)
+```
+
+```{r rendas}
+rend_trabalho <- ler_rend_trab(2018) %>% 
+  filter(!is.na(V8500_DEFLA)) %>% 
+  transmute(
+    V9001 = V9001,
+    valor_mensal = (V8500_DEFLA*V9011*FATOR_ANUALIZACAO*PESO_FINAL)/12
+    )
+
+outros_rend <- ler_rend_outros(2018) %>% 
+  transmute(
+    V9001 = V9001,
+    valor_mensal = ifelse( QUADRO==54,
+                           (V8500_DEFLA*V9011*FATOR_ANUALIZACAO*PESO_FINAL)/12,
+                           (V8500_DEFLA*FATOR_ANUALIZACAO*PESO_FINAL)/12
+    )
+  )
+
+junta <- rend_trabalho %>% 
+  bind_rows(outros_rend) %>% 
+  mutate(codigo = str_sub(V9001, 1,5)) %>% 
+  select(codigo, valor_mensal)
+
+morador_uc <- ler_morador(2018) %>% 
+  select(UF, ESTRATO_POF, TIPO_SITUACAO_REG, 
+         COD_UPA, NUM_DOM ,NUM_UC, PESO_FINAL) %>% 
+  unique()
+
+# 69 milhoes de famílias
+soma_familia <- sum( morador_uc$PESO_FINAL)
+
+
+tradutor_rendimento <- 
+
+merge1 <- junta %>%
+  left_join(ler_tradutor_rendimento(2018) %>% 
+              select(codigo, starts_with("nivel")), 
+            "codigo")
+
+soma_final_2 <- merge1 %>% 
+  group_by(nivel = nivel_2) %>% 
+  summarise(soma = sum(valor_mensal)) %>% 
+  filter(!is.na(nivel))
+
+soma_final_3 <- merge1 %>% 
+  group_by(nivel = nivel_3) %>% 
+  summarise(soma = sum(valor_mensal)) %>% 
+  filter(!is.na(nivel))
+
+soma_final <- bind_rows(soma_final_2, soma_final_3) %>% 
+  mutate(a = 1)
+
+merge2 <- soma_final %>% 
+  mutate(soma_familia = soma_familia,
+         media_mensal = round(soma/soma_familia, 2))
+
+#  orignal disponivel num arquivo na pasta memoria de calculo
+indice_rendimento <- tibble::tribble(
+  ~Indice, ~NIVEL,                                   ~descricao,
+        1,     11,                     "Rendimento do Trabalho",
+        2,    111,                                  "Empregado",
+        3,    112,                                 "Empregador",
+        4,    113,                              "Conta Propria",
+        5,     12,                              "Transferência",
+        6,    121,                "Aposentadoria e pensão INSS",
+        7,    122, "Aposentadoria e pensão previdência publica",
+        8,    123, "Aposentadoria e pensão previdência privada",
+        9,    124,                 "Programas sociais federais",
+       10,    125,       "Pensão alimentícia, mesada ou doação",
+       11,    126,                      "Outras Transferências",
+       12,     13,                      "Rendimento de aluguel",
+       13,     14,                              "Outras rendas"
+  )
+
+merge3 <- merge2 %>% 
+  left_join(indice_rendimento, by = c("nivel" = "NIVEL")) %>% 
+  arrange(Indice) %>% 
+  select(6,1,7,5)
+
+```
+
+
