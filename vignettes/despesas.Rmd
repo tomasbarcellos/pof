@@ -1,0 +1,276 @@
+---
+title: "despesas"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{despesas}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(pof)
+library(tidyverse)
+```
+
+```{r despesas}
+alu_estimado <- ler_aluguel(2018) %>% 
+  transmute( 
+    V9001 = V9001, 
+    valor_mensal = (V8000_DEFLA*V9011*FATOR_ANUALIZACAO*PESO_FINAL)/12
+  )
+
+desp_coletiva <- ler_desp_col(2018) %>%
+  transmute(V9001 = V9001, 
+            valor_mensal = ifelse( QUADRO == 10 | QUADRO == 19,
+                                   (V8000_DEFLA*V9011*FATOR_ANUALIZACAO*PESO_FINAL)/12, 
+                                   (V8000_DEFLA*FATOR_ANUALIZACAO*PESO_FINAL)/12
+            ) , 
+            inss_mensal=(V1904_DEFLA*V9011*FATOR_ANUALIZACAO*PESO_FINAL)/12
+  )
+
+cad_coletiva <- ler_cad_col(2018) %>% 
+  transmute(V9001 = V9001, 
+            valor_mensal = (V8000_DEFLA*FATOR_ANUALIZACAO*PESO_FINAL)/12
+  )
+
+desp_individual <- ler_desp_ind(2018) %>% 
+  transmute(V9001 = V9001,
+            valor_mensal = ifelse( QUADRO %in% c(44, 47, 48, 49, 50),
+                                   (V8000_DEFLA*V9011*FATOR_ANUALIZACAO*PESO_FINAL)/12, 
+                                   (V8000_DEFLA*FATOR_ANUALIZACAO*PESO_FINAL)/12)
+  )
+
+rend_trabalho <- ler_rend_trab(2018) %>% 
+  transmute(V9001 = V9001,
+             prev_pub_mensal=(V531112_DEFLA*V9011*FATOR_ANUALIZACAO*PESO_FINAL)/12,
+             imp_renda_mensal=(V531122_DEFLA*V9011*FATOR_ANUALIZACAO*PESO_FINAL)/12,
+             iss_mensal=(V531132_DEFLA*V9011*FATOR_ANUALIZACAO*PESO_FINAL)/12
+             )
+
+outros_rend <- ler_rend_outros(2018) %>% 
+  transmute(V9001 = V9001,
+            deducao_mensal = ifelse( QUADRO == 54,
+                                     (V8501_DEFLA*V9011*FATOR_ANUALIZACAO*PESO_FINAL)/12, 
+                                     (V8501_DEFLA*FATOR_ANUALIZACAO*PESO_FINAL)/12 
+            ) 
+  )
+
+desp_coletiva_n <- desp_coletiva %>% 
+  mutate(prev_pub_mensal = NA, imp_renda_mensal = NA,
+         iss_mensal = NA , deducao_mensal = NA)
+
+cad_coletiva_n <- cad_coletiva %>% 
+  mutate(inss_mensal = NA, prev_pub_mensal = NA, imp_renda_mensal = NA, 
+         iss_mensal = NA, deducao_mensal = NA)
+
+desp_individual_n <- desp_individual %>% 
+  mutate(inss_mensal = NA, prev_pub_mensal = NA, imp_renda_mensal = NA, 
+         iss_mensal = NA, deducao_mensal = NA)
+
+alu_estimado_n <- alu_estimado %>% 
+  mutate(V9001 = as.numeric(V9001), inss_mensal = NA, prev_pub_mensal = NA, 
+         imp_renda_mensal = NA, iss_mensal = NA, deducao_mensal = NA)
+
+rend_trabalho_n <- rend_trabalho %>% 
+  mutate(inss_mensal = NA, prev_pub_mensal = NA, imp_renda_mensal = NA, 
+         iss_mensal = NA, deducao_mensal = NA)
+
+outros_rend_n <- outros_rend %>% 
+  mutate(valor_mensal = NA, inss_mensal = NA, prev_pub_mensal = NA, 
+         imp_renda_mensal = NA, iss_mensal = NA) %>% 
+  select(V9001, valor_mensal, inss_mensal:iss_mensal, deducao_mensal)
+
+junta <- bind_rows( desp_coletiva_n , 
+                    cad_coletiva_n , 
+                    desp_individual_n ,
+                    alu_estimado_n,
+                    rend_trabalho_n ,
+                    outros_rend_n ) %>% 
+  mutate(codigo = round(V9001/100)) %>% 
+  select(-V9001)
+
+morador_uc <- ler_morador(2018) %>% 
+  select(UF, ESTRATO_POF, TIPO_SITUACAO_REG, 
+         COD_UPA, NUM_DOM ,NUM_UC, PESO_FINAL) %>% 
+  unique()
+
+# 69 milhoes de famílias
+soma_familia <- sum( morador_uc$PESO_FINAL)
+
+merge1 <- junta %>%
+  left_join(ler_tradutor_despesa(2018) %>% 
+              select(codigo, variavel, starts_with("nivel")), 
+            "codigo") %>% 
+  mutate(
+    valor = ifelse( variavel == 'V8000_DEFLA' , 
+                    valor_mensal , 
+                    ifelse( variavel == 'V1904_DEFLA' , 
+                            inss_mensal ,
+                            ifelse( variavel == 'V531112_DEFLA' , 
+                                    prev_pub_mensal ,
+                                    ifelse( variavel == 'V531122_DEFLA' , 
+                                            imp_renda_mensal ,
+                                            ifelse( variavel == 'V531132_DEFLA' , 
+                                                    iss_mensal ,
+                                                    ifelse( variavel == 'V8501_DEFLA' , 
+                                                            deducao_mensal ,
+                                                            NA
+                                                    )
+                                            )
+                                    )
+                            )
+                    )
+    )
+  ) %>% 
+  filter(!is.na(valor))
+
+soma_final_0 <- merge1 %>% 
+  group_by(nivel = nivel_0) %>% 
+  summarise(soma = sum(valor))
+
+soma_final_1 <- merge1 %>% 
+  group_by(nivel = nivel_1) %>% 
+  summarise(soma = sum(valor))
+
+soma_final_2 <- merge1 %>% 
+  group_by(nivel = nivel_2) %>% 
+  summarise(soma = sum(valor))
+
+soma_final_3 <- merge1 %>% 
+  group_by(nivel = nivel_3) %>% 
+  summarise(soma = sum(valor))
+
+soma_final_4 <- merge1 %>% 
+  group_by(nivel = nivel_4) %>% 
+  summarise(soma = sum(valor))  
+
+soma_final_5 <- merge1 %>% 
+  group_by(nivel = nivel_5) %>% 
+  summarise(soma = sum(valor))
+
+soma_final <- bind_rows(
+  soma_final_0,
+  soma_final_1,
+  soma_final_2,
+  soma_final_3,
+  soma_final_4,
+  soma_final_5
+) %>% 
+  mutate(a = 1)
+
+merge2 <-  soma_final %>% 
+  mutate(soma_familia = soma_familia,
+         media_mensal = round( soma / soma_familia , 2 ) )
+  
+# Tabela original de um xls da memoria de calculo
+indice_despesa <- tibble::tribble(
+     ~INDICE,  ~NIVEL,                                    ~DESCRICAO,
+           1,       0,                               "DESPESA TOTAL",
+           2,       1,                          "DESPESAS CORRENTES",
+           3,      11,                         "DESPESAS DE CONSUMO",
+           4,    1101,                                 "ALIMENTACAO",
+           5,    1102,                                   "HABITACAO",
+           6,  110201,                                     "ALUGUEL",
+           7, 1102011,                           "ALUGUEL MONETARIO",
+           8, 1102012,                       "ALUGUEL NAO MONETARIO",
+           9,  110202,                                  "CONDOMINIO",
+          10,  110203,                            "SERVICOS E TAXAS",
+          11, 1102031,                            "ENERGIA ELETRICA",
+          12, 1102032,                               "TELEFONE FIXO",
+          13, 1102033,                            "TELEFONE CELULAR",
+          14, 1102034,           "PACOTE DE TELEFONE, TV E INTERNET",
+          15, 1102035,                               "GAS DOMESTICO",
+          16, 1102036,                               "AGUA E ESGOTO",
+          17, 1102037,                                      "OUTRAS",
+          18,  110204,                           "MANUTENCAO DO LAR",
+          19,  110205,                          "ARTIGOS DE LIMPEZA",
+          20,  110206,                "MOBILIARIOS E ARTIGOS DO LAR",
+          21,  110207,                            "ELETRODOMESTICOS",
+          22,  110208,                 "CONSERTOS DE ARTIGOS DO LAR",
+          23,    1103,                                   "VESTUARIO",
+          24,  110301,                              "ROUPA DE HOMEM",
+          25,  110302,                             "ROUPA DE MULHER",
+          26,  110303,                            "ROUPA DE CRIANCA",
+          27,  110304,                       "CALCADOS E APETRECHOS",
+          28,  110305,                          "JOIAS E BIJUTERIAS",
+          29,  110306,                        "TECIDOS E ARMARINHOS",
+          30,    1104,                                  "TRANSPORTE",
+          31,  110401,                                      "URBANO",
+          32,  110402,               "GASOLINA PARA VEICULO PROPRIO",
+          33,  110403,                 "ALCOOL PARA VEICULO PROPRIO",
+          34,  110404,                "MANUTENCAO – VEICULO PROPRIO",
+          35,  110405,                       "AQUISICAO DE VEICULOS",
+          36,  110406,                         "VIAGENS ESPORADICAS",
+          37,  110407,                                      "OUTRAS",
+          38,    1105,                 "HIGIENE E CUIDADOS PESSOAIS",
+          39,  110501,                                     "PERFUME",
+          40,  110502,                        "PRODUTOS PARA CABELO",
+          41,  110503,                                    "SABONETE",
+          42,  110504,      "INSTRUMENTOS E PRODUTOS DE USO PESSOAL",
+          43,    1106,                         "ASSISTENCIA A SAUDE",
+          44,  110601,                                    "REMEDIOS",
+          45,  110602,                        "PLANO / SEGURO SAUDE",
+          46,  110603,              "CONSULTA E TRATAMENTO DENTARIO",
+          47,  110604,                             "CONSULTA MEDICA",
+          48,  110605,            "TRATAMENTO MEDICO E AMBULATORIAL",
+          49,  110606,                        "SERVICOS DE CIRURGIA",
+          50,  110607,                              "HOSPITALIZACAO",
+          51,  110608,                             "EXAMES DIVERSOS",
+          52,  110609,                      "MATERIAL DE TRATAMENTO",
+          53,  110610,                                      "OUTRAS",
+          54,    1107,                                    "EDUCACAO",
+          55,  110701,                            "CURSOS REGULARES",
+          56,  110702,                              "CURSO SUPERIOR",
+          57,  110703,                               "OUTROS CURSOS",
+          58,  110704,        "LIVROS DIDATICOS E REVISTAS TECNICAS",
+          59,  110705,                           "ARTIGOS ESCOLARES",
+          60,  110706,                                      "OUTRAS",
+          61,    1108,                         "RECREACAO E CULTURA",
+          62,  110801,                          "BRINQUEDOS E JOGOS",
+          63,  110802,                        "CELULAR E ACESSORIOS",
+          64,  110803, "PERIODICOS, LIVROS E REVISTAS NAO DIDATICOS",
+          65,  110804,                       "RECREACOES E ESPORTES",
+          66,  110805,                                      "OUTRAS",
+          67,    1109,                                        "FUMO",
+          68,    1110,                           "SERVICOS PESSOAIS",
+          69,  111001,                                 "CABELEREIRO",
+          70,  111002,                         "MANICURO E PEDICURO",
+          71,  111003,               "CONSERTOS DE ARTIGOS PESSOAIS",
+          72,  111004,                                      "OUTRAS",
+          73,    1111,                           "DESPESAS DIVERSAS",
+          74,  111101,                             "JOGOS E APOSTAS",
+          75,  111102,                                 "COMUNICACAO",
+          76,  111103,                         "CERIMONIAS E FESTAS",
+          77,  111104,                      "SERVICOS PROFISSIONAIS",
+          78,  111105,                    "IMOVEIS DE USO OCASIONAL",
+          79,  111106,                                      "OUTRAS",
+          80,      12,                   "OUTRAS DESPESAS CORRENTES",
+          81,    1201,                                    "IMPOSTOS",
+          82,    1202,                  "CONTRIBUICOES TRABALHISTAS",
+          83,    1203,                          "SERVICOS BANCARIOS",
+          84,    1204,                  "PENSOES, MESADAS E DOACOES",
+          85,    1205,                         "PREVIDENCIA PRIVADA",
+          86,    1206,                                      "OUTRAS",
+          87,       2,                            "AUMENTO DO ATIVO",
+          88,      21,                          "IMOVEL (AQUISICAO)",
+          89,      22,                            "IMOVEL (REFORMA)",
+          90,      23,                        "OUTROS INVESTIMENTOS",
+          91,       3,                       "DIMINUICAO DO PASSIVO",
+          92,      31,                                 "EMPRESTIMOS",
+          93,      32,                         "PRESTACAO DO IMOVEL"
+     )
+
+merge3 <- merge2 %>% 
+  left_join(indice_despesa, by = c("nivel" = "NIVEL")) %>% 
+  arrange(INDICE) %>% 
+  select(6,1,7,5)
+```
+
+
