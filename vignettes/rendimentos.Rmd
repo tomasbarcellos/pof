@@ -50,9 +50,6 @@ morador_uc <- ler_morador(2018) %>%
 # 69 milhoes de famílias
 soma_familia <- sum( morador_uc$PESO_FINAL)
 
-
-tradutor_rendimento <- 
-
 merge1 <- junta %>%
   left_join(ler_tradutor_rendimento(2018) %>% 
               select(codigo, starts_with("nivel")), 
