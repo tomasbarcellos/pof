@@ -20,6 +20,7 @@ library(tidyverse)
 ```
 
 ```{r rendas}
+setwd("..")
 rend_trabalho <- ler_rend_trab(2018) %>% 
   filter(!is.na(V8500_DEFLA)) %>% 
   transmute(
@@ -96,6 +97,8 @@ merge3 <- merge2 %>%
   left_join(indice_rendimento, by = c("nivel" = "NIVEL")) %>% 
   arrange(Indice) %>% 
   select(6,1,7,5)
+
+merge3
 
 ```
 
