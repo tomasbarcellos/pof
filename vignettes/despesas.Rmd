@@ -168,7 +168,7 @@ soma_final <- bind_rows(
 merge2 <-  soma_final %>% 
   mutate(soma_familia = soma_familia,
          media_mensal = round( soma / soma_familia , 2 ) )
-  
+
 # Tabela original de um xls da memoria de calculo
 indice_despesa <- tibble::tribble(
      ~INDICE,  ~NIVEL,                                    ~DESCRICAO,
