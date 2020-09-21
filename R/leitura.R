@@ -183,22 +183,15 @@ ler_tradutor_rendimento <- function(ano) {
   pasta <- dir(glue::glue("dados/{ano}/"), full.names = TRUE, pattern = "[Tt]radutores.+")
   arq <- dir(glue::glue("{pasta[[1]]}"), pattern = "[Tt]radutor[_ ][Rr]endimento", full.names = T)
 
-  dic <- readxl::read_excel(arq) %>%
+  readxl::read_excel(arq) %>%
     janitor::clean_names()
-
-  # descs <- dic %>%
-  #   select(codigo, starts_with("desc")) %>%
-  #   tidyr::pivot_longer(-codigo, names_to = c("lixo", "nivel"), names_sep = "_",
-  #                       values_to = "descricao") %>%
-  #   select(-lixo)
-  #
-  # dic %>%
-  #   select(codigo, starts_with("nivel")) %>%
-  #   tidyr::pivot_longer(-codigo, names_to = c("lixo", "nivel"), names_sep = "_",
-  #                       values_to = "rubrica") %>%
-  #   select(-lixo) %>%
-  #   left_join(descs, c("codigo", "nivel"))
-
-  dic
 }
-# dom <- ler_domicilio(2018)
+
+ler_tradutor_despesa <- function(ano) {
+  pasta <- dir(glue::glue("dados/{ano}/"), full.names = TRUE, pattern = "[Tt]radutores.+")
+  arq <- dir(glue::glue("{pasta[[1]]}"), pattern = "[Tt]radutor[_ ][Dd]espesa_[Gg]eral", full.names = T)
+
+  readxl::read_excel(arq) %>%
+    janitor::clean_names()
+}
+
