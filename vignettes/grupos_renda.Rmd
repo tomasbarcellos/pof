@@ -17,7 +17,11 @@ knitr::opts_chunk$set(
 ```{r setup}
 library(pof)
 library(tidyverse)
-setwd("../")
+```
+
+
+```{r passado, eval = FALSE, include = FALSE}
+setwd("..")
 # v9001 é código do rendimento
 produtos <- readxl::read_excel("dados/2018/Cadastro de Produtos.xls", 
                                col_names = c("quadro", "v9001",
@@ -45,14 +49,14 @@ rendimentos_outros <- pof::ler_rend_outros(2018) %>%
 rendas_uc_trab <- rendimentos_trabalho %>% 
   filter(v8500 != 9999999) %>% 
   group_by(cod_uc, v9001 = as.character(v9001)) %>% 
-  summarise(rendimento = sum(v8500, na.rm = TRUE), 
+  summarise(rendimento = sum(v8500 * v9011, na.rm = TRUE)/12, 
             peso_final = first(peso_final),
             renda_total = first(renda_total)) 
 
 rendas_uc_outros <- rendimentos_outros %>% 
   filter(v8500 != 9999999) %>% 
   group_by(cod_uc, v9001 = as.character(v9001)) %>% 
-  summarise(rendimento = sum(v8500, na.rm = TRUE), 
+  summarise(rendimento = sum(v8500 * v9011, na.rm = TRUE)/12, 
             peso_final = first(peso_final),
             renda_total = first(renda_total)) 
 
@@ -63,55 +67,7 @@ rendas_uc <- rendas_uc_outros %>%
   mutate(partic = round(rendimento * 100 / renda_total)) %>% 
   ungroup()
 
-rendas_uc %>% 
-  group_by(descricao_produto) %>% 
-  summarise(renda = sum(rendimento, na.rm = TRUE)) %>% 
-  mutate(perc = renda * 100/ sum(renda)) %>% 
-  arrange(-perc) %>% 
-  mutate(perc_acu = cumsum(perc)) %>% 
-  print(n = 30)
-
-dic_mv <- tribble(
-  ~v9001, ~tipo,
-  5300301, "cv",
-  5500201, "cv",
-  5300601, "cv",
-  5500101, "cv",
-  5400401, "mv", 
-  5500301, "mv",
-  5400101, "mv",
-  5600101, NA_character_,
-  5300401, "mv",
-  5700101, NA_character_,
-  5300101, "cv",
-  5501001, NA_character_,
-  5400501, "mv",
-  5500401, "mv",
-  5401601, "cv",
-  5500801, NA_character_,
-  5401701, "cv",
-  5401101, NA_character_,
-  5401401, "mv",
-  5501601, NA_character_,
-  5300501, "mv",
-  5400601, "mv",
-  5400201, "mv",
-  5401301, NA_character_,
-  5500501, "mv",
-  5501701, NA_character_,
-  5400901, "mv",
-  5501501, "cv",
-  5500901, "mv",
-  5502501, NA_character_,
-) %>% 
-  mutate(v9001 = as.character(v9001))
-
-
-rendas_uc %>% 
-  left_join(dic_mv) %>% 
-  group_by(cod_uc, tipo) %>% 
-  summarise(renda = sum(rendimento))
-
+# Daqui para baixo nessa chunck é tudo furada
 
 rendas_uc %>% 
   group_by(cod_uc) %>% 
@@ -289,5 +245,89 @@ rendas_uc_outros %>%
 #   group_by(cod_uc) %>% 
 #   select(starts_with("v"), renda_total) %>% 
 #   summarise_all(sum, na.rm = TRUE)
+```
+
+# usando tradutor
+
+```{r, eval=FALSE}
+# Tudo errado.
+# trabalho em progresso
+tradutor_2018 <- ler_tradutor_rendimento(2018) %>% 
+  mutate(descricao_3 = ifelse(is.na(descricao_3), descricao_2, descricao_3)) %>% 
+  select(codigo, nivel_3, tipo_renda = descricao_3)
+
+# Tentativa de reproduzir dados UBGE
+peso_uc <- rendas_uc %>% 
+  select(cod_uc, peso_final) %>% 
+  unique()
+
+rendas_uc %>% 
+  mutate(codigo = str_sub(v9001, 1, 5)) %>% 
+  filter(str_sub(cod_uc, 1, 1) == "2") %>% 
+  left_join(tradutor_2018, "codigo") %>% 
+  select(cod_uc, rendimento, nivel_3, tipo_renda) %>% 
+  group_by(cod_uc, nivel_3, tipo_renda) %>% 
+  summarise(rendimento = sum(rendimento, na.rm = TRUE)) %>% 
+  left_join(peso_uc, "cod_uc") %>% 
+  ungroup() %>% 
+  # group_by(nivel_3, tipo_renda) %>% 
+  summarise(media = collapse::fmean(rendimento, w = peso_final),
+            media2 = mean(rendimento),
+            cv = collapse::fsd(rendimento, w = peso_final)/media,
+            cv2 = sd(rendimento)/mean(rendimento),
+            soma = collapse::fsum(rendimento * peso_final)/1e9
+            ) 
+
+
+
+
+
+
+rendimento_prof <- rendimentos_trabalho %>% 
+  bind_rows(rendimentos_outros) %>% 
+  mutate(codigo = str_sub(v9001, 1, 5)) %>% 
+  left_join(tradutor_2018, by = "codigo") %>% 
+  group_by(cod_uc, cod_pessoa, tipo_renda, v5302, v5303, v5304) %>% 
+  summarise(rendimento = sum(v8500, na.rm = TRUE),
+            peso_final = first(peso_final)) %>% 
+  ungroup()
+
+rend_categs <- rendimento_prof %>% 
+  mutate(forma = case_when(
+    v5302 == 1 ~ "cv",
+    v5302 == 2 ~ "mv",
+    v5302 == 3 ~ "cv",
+    v5302 == 4 & v5303 == 1 ~ "mv", # setor estatutário
+    # supoe não ter informalidade no setor publico
+    v5302 == 4 & v5304 == 1 ~ "cv", # trabalhador de estatal
+    # Tem casos (2491) de servidor sem carteria assinada ou estatuto. Pq?
+    v5302 == 5 ~ "mv", # empregador
+    v5302 == 6 ~ "cv/mv", # conta própria # não encontrei setor trabalhado
+    v5302 == 7 ~ "cv", # trab não remunerado ?
+    TRUE ~ NA_character_,
+  ))
+
+rend_categs %>% 
+  group_by(forma) %>% 
+  summarise(rendimento = sum(rendimento))
+
+todos_rendimentos <- rendimentos_trabalho %>% 
+  bind_rows(rendimentos_outros)
+
+todos_rendimentos %>% 
+  mutate(codigo = str_sub(v9001, 1, 5)) %>% 
+  left_join(tradutor_2018, by = "codigo") %>% 
+  filter(v8500 != 9999999) %>%
+  group_by(cod_uc, tipo_renda) %>%
+  summarise(v8500 = sum(v8500, na.rm = TRUE), 
+            peso_final = first(peso_final)) %>% 
+  # ungroup() %>% 
+  group_by(tipo_renda) %>%
+  summarise(rendimento = weighted.mean(v8500, peso_final, na.rm = TRUE))
+  # summarise(rendimento = sum(v8500, na.rm = TRUE)) %>% 
+  # mutate(prop = rendimento * 100 / sum(rendimento))
+
+
+
 ```
 

@@ -12,8 +12,11 @@ LazyData: true
 RoxygenNote: 7.1.0
 Imports: 
     magrittr,
-    glue
+    glue,
+    pnadc (>= 0.1.0)
 Suggests: 
     knitr,
     rmarkdown
 VignetteBuilder: knitr
+Remotes:  
+    tomasbarcellos/pnadc

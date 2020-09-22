@@ -172,4 +172,26 @@ ler_domicilio <- function(ano) {
   ler_pof(glue::glue("dados/{ano}/DOMICILIO.txt"),
           tamanhos, nomes)
 }
-# dom <- ler_domicilio(2018)
+
+#' Tradutores de rendimento
+#'
+#' @param ano Ano do tradutor
+#'
+#' @return Uma tibble com tradutor
+#' @export
+ler_tradutor_rendimento <- function(ano) {
+  pasta <- dir(glue::glue("dados/{ano}/"), full.names = TRUE, pattern = "[Tt]radutores.+")
+  arq <- dir(glue::glue("{pasta[[1]]}"), pattern = "[Tt]radutor[_ ][Rr]endimento", full.names = T)
+
+  readxl::read_excel(arq) %>%
+    janitor::clean_names()
+}
+
+ler_tradutor_despesa <- function(ano) {
+  pasta <- dir(glue::glue("dados/{ano}/"), full.names = TRUE, pattern = "[Tt]radutores.+")
+  arq <- dir(glue::glue("{pasta[[1]]}"), pattern = "[Tt]radutor[_ ][Dd]espesa_[Gg]eral", full.names = T)
+
+  readxl::read_excel(arq) %>%
+    janitor::clean_names()
+}
+
