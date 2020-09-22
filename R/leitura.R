@@ -113,7 +113,7 @@ ler_rend_trab <- function(ano) {
   stopifnot(ano %in% c(2003, 2009, 2018))
 
   tamanhos <- c(2,4,1,9,2,1,2,2,1,1,7,1,1,1,1,1,1,7,7,7
-                ,7,2,2,3,1,12,10,10,10,10,1,1,14,14,10)
+                ,7,2,2,3,1,12,10,10,10,10,1,1,14,14,10,4,5)
   nomes <- c("UF", "ESTRATO_POF", "TIPO_SITUACAO_REG",
              "COD_UPA", "NUM_DOM", "NUM_UC",
              "COD_INFORMANTE", "QUADRO", "SUB_QUADRO",
@@ -124,7 +124,7 @@ ler_rend_trab <- function(ano) {
              "V531112_DEFLA", "V531122_DEFLA",
              "V531132_DEFLA", "COD_IMPUT_VALOR",
              "FATOR_ANUALIZACAO", "PESO", "PESO_FINAL",
-             "RENDA_TOTAL"
+             "RENDA_TOTAL","V53011","V53061"
   )
 
   ler_pof(glue::glue("dados/{ano}/RENDIMENTO_TRABALHO.txt"),
