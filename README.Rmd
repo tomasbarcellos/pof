@@ -45,7 +45,7 @@ downaload_pof(2018)
 unzip_pof(2018)
 ```
 
-Com os dados baixamos, o pacote oferece uma função para ler cada tabela
+Com os dados baixados, o pacote oferece uma função para ler cada tabela
 da pesquisa. 
 
 > Por enquanto os scripts de leitura apenas reproduzem as instruções

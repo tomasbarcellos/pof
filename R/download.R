@@ -22,7 +22,7 @@ criar_link <-  function(ano) {
 }
 
 #' @export
-downaload_pof <- function(ano) {
+download_pof <- function(ano) {
   stopifnot(ano %in% c(2003, 2009, 2018))
   links <- criar_link(ano)
 
