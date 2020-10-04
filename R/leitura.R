@@ -195,3 +195,11 @@ ler_tradutor_despesa <- function(ano) {
     janitor::clean_names()
 }
 
+ler_tradutor_alimentacao <- function(ano) {
+  pasta <- dir(glue::glue("dados/{ano}/"), full.names = TRUE, pattern = "[Tt]radutores.+")
+  arq <- dir(glue::glue("{pasta[[1]]}"), pattern = "[Tt]radutor[_ ][Aa]liment", full.names = T)
+
+  readxl::read_excel(arq) %>%
+    janitor::clean_names()
+}
+
