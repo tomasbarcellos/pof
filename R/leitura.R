@@ -16,10 +16,26 @@ ler_pof <- function(arquivo, tamanhos, nomes) {
 ler_morador <- function(ano) {
   stopifnot(ano %in% c(2003, 2009, 2018))
 
-  tamanhos <- c(2,4,1,9,2,1,2,2,1,2,2,4,3,1,1,
-                1,1,1,2,1,2,1,1,1,1,1,1,1,1,1,
-                1,1,1,1,1,2,1,1,2,1,1,2,1,1,1,
-                2,1,2,14,14,10)
+  regex_file <- stringr::regex("morador(_s)?\\.txt", ignore_case = TRUE)
+
+  files <- dir(path = glue::glue("dados/{ano}/"), recursive = TRUE,
+               full.names = TRUE)
+
+  if (ano %in% c(2003, 2009)) {
+
+    instrucoes <- files %>%
+      str_subset(stringr::fixed("leitura", ignore_case = TRUE)) %>%
+      instrucoes_sas()
+
+    return(ler_sas(files, instrucoes, regex_file))
+
+  }
+
+  tamanhos <- c(2, 4, 1, 9, 2, 1, 2, 2, 1, 2, 2, 4, 3, 1, 1,
+                1, 1, 1, 2, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                1, 1, 1, 1, 1, 2, 1, 1, 2, 1, 1, 2, 1, 1, 1,
+                2, 1, 2, 14, 14, 10)
+
   nomes <- c("UF", "ESTRATO_POF", "TIPO_SITUACAO_REG",
              "COD_UPA", "NUM_DOM", "NUM_UC",
              "COD_INFORMANTE", "V0306", "V0401",
@@ -34,8 +50,10 @@ ler_morador <- function(ano) {
              "V0425", "V0426", "V0427", "V0428",
              "V0429", "V0430", "ANOS_ESTUDO","PESO",
              "PESO_FINAL", "RENDA_TOTAL")
-  ler_pof(glue::glue("dados/{ano}/MORADOR.txt"),
-          tamanhos, nomes)
+
+  files %>%
+    stringr::str_subset(regex_file) %>%
+    ler_pof(tamanhos, nomes)
 }
 # morad <- ler_morador(2018)
 
