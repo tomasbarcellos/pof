@@ -1,3 +1,7 @@
+#' Utilidade para ler arquivos de microdados
+#' @param arquivo caminho para arquivo
+#' @param tamanhos tamanho das colunas
+#' @param nomes nomes das colunas
 ler_pof <- function(arquivo, tamanhos, nomes) {
   readr::read_fwf(
     arquivo, col_positions = readr::fwf_widths(tamanhos, nomes),
@@ -5,6 +9,9 @@ ler_pof <- function(arquivo, tamanhos, nomes) {
   )
 }
 
+#' Ler tabelas da POF
+#' @param ano Ano da pesquisa
+#' @rdname leitura
 #' @export
 ler_morador <- function(ano) {
   stopifnot(ano %in% c(2003, 2009, 2018))
@@ -32,6 +39,7 @@ ler_morador <- function(ano) {
 }
 # morad <- ler_morador(2018)
 
+#' @rdname leitura
 #' @export
 ler_desp_col <- function(ano) {
   stopifnot(ano %in% c(2003, 2009, 2018))
@@ -52,6 +60,7 @@ ler_desp_col <- function(ano) {
 }
 # desp_col <- ler_desp_col(2018)
 
+#' @rdname leitura
 #' @export
 ler_cad_col <- function(ano) {
   stopifnot(ano %in% c(2003, 2009, 2018))
@@ -71,6 +80,7 @@ ler_cad_col <- function(ano) {
 }
 # cad_col <- ler_cad_col(2018)
 
+#' @rdname leitura
 #' @export
 ler_desp_ind <- function(ano) {
   stopifnot(ano %in% c(2003, 2009, 2018))
@@ -90,6 +100,7 @@ ler_desp_ind <- function(ano) {
 }
 # desp_ind <- ler_desp_ind(2018)
 
+#' @rdname leitura
 #' @export
 ler_aluguel <- function(ano) {
   stopifnot(ano %in% c(2003, 2009, 2018))
@@ -108,6 +119,7 @@ ler_aluguel <- function(ano) {
 }
 # alug <- ler_aluguel(2018)
 
+#' @rdname leitura
 #' @export
 ler_rend_trab <- function(ano) {
   stopifnot(ano %in% c(2003, 2009, 2018))
@@ -132,6 +144,7 @@ ler_rend_trab <- function(ano) {
 }
 # trab <- ler_rend_trab(2018)
 
+#' @rdname leitura
 #' @export
 ler_rend_outros <- function(ano) {
   stopifnot(ano %in% c(2003, 2009, 2018))
@@ -151,6 +164,7 @@ ler_rend_outros <- function(ano) {
 }
 # outros <- ler_rend_outros(2018)
 
+#' @rdname leitura
 #' @export
 ler_domicilio <- function(ano) {
   stopifnot(ano %in% c(2003, 2009, 2018))
@@ -176,8 +190,8 @@ ler_domicilio <- function(ano) {
 #' Tradutores de rendimento
 #'
 #' @param ano Ano do tradutor
-#'
 #' @return Uma tibble com tradutor
+#' @rdname tradutores
 #' @export
 ler_tradutor_rendimento <- function(ano) {
   pasta <- dir(glue::glue("dados/{ano}/"), full.names = TRUE, pattern = "[Tt]radutores.+")
@@ -187,6 +201,8 @@ ler_tradutor_rendimento <- function(ano) {
     janitor::clean_names()
 }
 
+#' @rdname tradutores
+#' @export
 ler_tradutor_despesa <- function(ano) {
   pasta <- dir(glue::glue("dados/{ano}/"), full.names = TRUE, pattern = "[Tt]radutores.+")
   arq <- dir(glue::glue("{pasta[[1]]}"), pattern = "[Tt]radutor[_ ][Dd]espesa_[Gg]eral", full.names = T)
@@ -195,6 +211,8 @@ ler_tradutor_despesa <- function(ano) {
     janitor::clean_names()
 }
 
+#' @rdname tradutores
+#' @export
 ler_tradutor_alimentacao <- function(ano) {
   pasta <- dir(glue::glue("dados/{ano}/"), full.names = TRUE, pattern = "[Tt]radutores.+")
   arq <- dir(glue::glue("{pasta[[1]]}"), pattern = "[Tt]radutor[_ ][Aa]liment", full.names = T)
