@@ -2,9 +2,15 @@
 % Please edit documentation in R/leitura.R
 \name{ler_tradutor_rendimento}
 \alias{ler_tradutor_rendimento}
+\alias{ler_tradutor_despesa}
+\alias{ler_tradutor_alimentacao}
 \title{Tradutores de rendimento}
 \usage{
 ler_tradutor_rendimento(ano)
+
+ler_tradutor_despesa(ano)
+
+ler_tradutor_alimentacao(ano)
 }
 \arguments{
 \item{ano}{Ano do tradutor}
