@@ -142,6 +142,22 @@ ler_aluguel <- function(ano) {
 ler_rend_trab <- function(ano) {
   stopifnot(ano %in% c(2003, 2009, 2018))
 
+  regex_file <- stringr::regex("(?<!outros_|SAS/|de )rendim.+(_s)?\\.txt",
+                               ignore_case = TRUE)
+
+  files <- dir(path = glue::glue("dados/{ano}/"), recursive = TRUE,
+               full.names = TRUE)
+
+  if (ano %in% c(2003, 2009)) {
+
+    instrucoes <- files %>%
+      str_subset(stringr::fixed("leitura", ignore_case = TRUE)) %>%
+      instrucoes_sas()
+
+    return(ler_sas(files, instrucoes, regex_file))
+
+  }
+
   tamanhos <- c(2,4,1,9,2,1,2,2,1,1,7,1,1,1,1,1,1,7,7,7
                 ,7,2,2,3,1,12,10,10,10,10,1,1,14,14,10,4,5)
   nomes <- c("UF", "ESTRATO_POF", "TIPO_SITUACAO_REG",
@@ -157,8 +173,9 @@ ler_rend_trab <- function(ano) {
              "RENDA_TOTAL","V53011","V53061"
   )
 
-  ler_pof(glue::glue("dados/{ano}/RENDIMENTO_TRABALHO.txt"),
-          tamanhos, nomes)
+  files %>%
+    str_subset(regex_file) %>%
+    ler_pof(tamanhos, nomes)
 }
 # trab <- ler_rend_trab(2018)
 
