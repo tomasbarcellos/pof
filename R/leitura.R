@@ -83,8 +83,23 @@ ler_desp_col <- function(ano) {
 ler_cad_col <- function(ano) {
   stopifnot(ano %in% c(2003, 2009, 2018))
 
-  tamanhos <- c(2,4,1,9,2,1,2,3,7,2,10,12,
-                10,1,2,14,14,10,9,4,5,9)
+  regex_file <- stringr::regex("caderneta_.+(_s)?\\.txt",
+                               ignore_case = TRUE)
+
+  files <- dir(path = glue::glue("dados/{ano}/"), recursive = TRUE,
+               full.names = TRUE)
+
+  if (ano %in% c(2003, 2009)) {
+
+    instrucoes <- files %>%
+      str_subset(stringr::fixed("leitura", ignore_case = TRUE)) %>%
+      instrucoes_sas()
+
+    return(ler_sas(files, instrucoes, regex_file))
+
+  }
+  tamanhos <- c(2, 4, 1, 9, 2, 1, 2, 3, 7, 2, 10, 12,
+                10, 1, 2, 14, 14, 10, 9, 4, 5, 9)
   nomes <- c("UF", "ESTRATO_POF", "TIPO_SITUACAO_REG",
              "COD_UPA", "NUM_DOM", "NUM_UC", "QUADRO",
              "SEQ", "V9001", "V9002", "V8000", "DEFLATOR",
@@ -93,8 +108,10 @@ ler_cad_col <- function(ano) {
              "RENDA_TOTAL",
              "V9005", "V9007", "V9009", "QTD_FINAL"
   )
-  ler_pof(glue::glue("dados/{ano}/CADERNETA_COLETIVA.txt"),
-          tamanhos, nomes)
+
+  files %>%
+    str_subset(regex_file) %>%
+    ler_pof(tamanhos, nomes)
 }
 # cad_col <- ler_cad_col(2018)
 
@@ -108,9 +125,6 @@ ler_desp_ind <- function(ano) {
 
   files <- dir(path = glue::glue("dados/{ano}/"), recursive = TRUE,
                full.names = TRUE)
-
-  files %>%
-    str_subset(regex_file)
 
   if (ano %in% c(2003, 2009)) {
 
