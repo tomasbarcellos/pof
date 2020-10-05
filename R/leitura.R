@@ -167,8 +167,23 @@ ler_rend_trab <- function(ano) {
 ler_rend_outros <- function(ano) {
   stopifnot(ano %in% c(2003, 2009, 2018))
 
-  tamanhos <- c(2,4,1,9,2,1,2,2,2,7,10,10,2,
-                2,12,10,10,1,1,14,14,10)
+  regex_file <- stringr::regex("outro.+(_s)?\\.txt", ignore_case = TRUE)
+
+  files <- dir(path = glue::glue("dados/{ano}/"), recursive = TRUE,
+               full.names = TRUE)
+
+  if (ano %in% c(2003, 2009)) {
+
+    instrucoes <- files %>%
+      str_subset(stringr::fixed("leitura", ignore_case = TRUE)) %>%
+      instrucoes_sas()
+
+    return(ler_sas(files, instrucoes, regex_file))
+
+  }
+
+  tamanhos <- c(2, 4, 1, 9, 2, 1, 2, 2, 2, 7, 10, 10, 2,
+                2, 12, 10, 10, 1, 1, 14, 14, 10)
   nomes <- c("UF", "ESTRATO_POF", "TIPO_SITUACAO_REG",
              "COD_UPA", "NUM_DOM", "NUM_UC",
              "COD_INFORMANTE", "QUADRO", "SEQ", "V9001",
@@ -177,8 +192,9 @@ ler_rend_outros <- function(ano) {
              "COD_IMPUT_VALOR", "FATOR_ANUALIZACAO",
              "PESO", "PESO_FINAL", "RENDA_TOTAL")
 
-  ler_pof(glue::glue("dados/{ano}/OUTROS_RENDIMENTOS.txt"),
-          tamanhos, nomes)
+  files %>%
+    str_subset(regex_file) %>%
+    ler_pof(tamanhos, nomes)
 }
 # outros <- ler_rend_outros(2018)
 
