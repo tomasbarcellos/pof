@@ -187,6 +187,21 @@ ler_rend_outros <- function(ano) {
 ler_domicilio <- function(ano) {
   stopifnot(ano %in% c(2003, 2009, 2018))
 
+  regex_file <- stringr::regex("domicilio(_s)?\\.txt", ignore_case = TRUE)
+
+  files <- dir(path = glue::glue("dados/{ano}/"), recursive = TRUE,
+               full.names = TRUE)
+
+  if (ano %in% c(2003, 2009)) {
+
+    instrucoes <- files %>%
+      str_subset(stringr::fixed("leitura", ignore_case = TRUE)) %>%
+      instrucoes_sas()
+
+    return(ler_sas(files, instrucoes, regex_file))
+
+  }
+
   tamanhos <- c(2,4,1,9,2,1,1,1,1,2,1,1,1,1,1,1,1,1,1,2,
                 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,14,14)
   nomes <- c("UF", "ESTRATO_POF", "TIPO_SITUACAO_REG",
@@ -201,8 +216,9 @@ ler_domicilio <- function(ano) {
              "PESO_FINAL"
   )
 
-  ler_pof(glue::glue("dados/{ano}/DOMICILIO.txt"),
-          tamanhos, nomes)
+  files %>%
+    str_subset(regex_file) %>%
+    ler_pof(tamanhos, nomes)
 }
 
 #' Tradutores de rendimento
