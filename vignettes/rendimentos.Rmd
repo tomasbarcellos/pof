@@ -20,7 +20,7 @@ library(tidyverse)
 ```
 
 ```{r rendas}
-setwd("..")
+setwd(here::here())
 rend_trabalho <- ler_rend_trab(2018) %>% 
   filter(!is.na(V8500_DEFLA)) %>% 
   transmute(

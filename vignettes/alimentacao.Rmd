@@ -20,62 +20,62 @@ library(tidyverse)
 ```
 
 ```{r alimentacao}
-
-cad_coletiva <- ler_cad_col(2018) %>% 
-  mutate(codigo = round(V9001 / 100)) %>% 
-  filter(codigo < 86001 | codigo > 89999) %>% 
+setwd(here::here())
+cad_coletiva <- ler_cad_col(2018) %>%
+  mutate(codigo = round(V9001 / 100)) %>%
+  filter(codigo < 86001 | codigo > 89999) %>%
   mutate(valor_mensal = (V8000_DEFLA*FATOR_ANUALIZACAO*PESO_FINAL)/12)
-  
-desp_individual <- ler_desp_ind(2018) %>% 
-  mutate(codigo = round(V9001 / 100)) %>% 
-  filter(QUADRO == 24 | codigo == 41001 | codigo == 48018 | 
-           codigo == 49075 | codigo == 49089) %>% 
+
+desp_individual <- ler_desp_ind(2018) %>%
+  mutate(codigo = round(V9001 / 100)) %>%
+  filter(QUADRO == 24 | codigo == 41001 | codigo == 48018 |
+           codigo == 49075 | codigo == 49089) %>%
   mutate(
-    valor_mensal = ifelse( 
+    valor_mensal = ifelse(
       QUADRO == 24 | QUADRO == 41,
-      (V8000_DEFLA*FATOR_ANUALIZACAO*PESO_FINAL)/12, 
+      (V8000_DEFLA*FATOR_ANUALIZACAO*PESO_FINAL)/12,
       (V8000_DEFLA*V9011*FATOR_ANUALIZACAO*PESO_FINAL)/12
     )
   )
 
 junta_ali <- bind_rows(cad_coletiva, desp_individual)
 
-morador_uc <- ler_morador(2018) %>% 
-  select(UF, ESTRATO_POF, TIPO_SITUACAO_REG, 
-         COD_UPA, NUM_DOM ,NUM_UC, PESO_FINAL) %>% 
+morador_uc <- ler_morador(2018) %>%
+  select(UF, ESTRATO_POF, TIPO_SITUACAO_REG,
+         COD_UPA, NUM_DOM ,NUM_UC, PESO_FINAL) %>%
   unique()
 
 # 69 milhoes de famílias
 soma_familia <- sum( morador_uc$PESO_FINAL)
 
-merge1 <- junta_ali %>% 
-  left_join(ler_tradutor_alimentacao(2018), "codigo") %>% 
+merge1 <- junta_ali %>%
+  left_join(ler_tradutor_alimentacao(2018), "codigo") %>%
   filter(!is.na(valor_mensal))
 
-soma_final_0 <- merge1 %>% 
-  group_by(nivel = nivel_0) %>% 
+soma_final_0 <- merge1 %>%
+  group_by(nivel = nivel_0) %>%
   summarise(soma = sum(valor_mensal))
 
-soma_final_1 <- merge1 %>% 
-  group_by(nivel = nivel_1) %>% 
+soma_final_1 <- merge1 %>%
+  group_by(nivel = nivel_1) %>%
   summarise(soma = sum(valor_mensal))
 
-soma_final_2 <- merge1 %>% 
-  group_by(nivel = nivel_2) %>% 
+soma_final_2 <- merge1 %>%
+  group_by(nivel = nivel_2) %>%
   summarise(soma = sum(valor_mensal))
 
-soma_final_3 <- merge1 %>% 
-  group_by(nivel = nivel_3) %>% 
+soma_final_3 <- merge1 %>%
+  group_by(nivel = nivel_3) %>%
   summarise(soma = sum(valor_mensal))
 
-soma_final <- bind_rows( 
+soma_final <- bind_rows(
   soma_final_0 ,
   soma_final_1 ,
   soma_final_2 ,
   soma_final_3
 )
 
-merge2 <- soma_final %>% 
+merge2 <- soma_final %>%
   mutate(soma_familia = soma_familia,
          media_mensal = round( soma / soma_familia , 2 ))
 
@@ -168,9 +168,9 @@ indice_alimentacao <- tibble::tribble(
        84,    208,                                        "Outras"
   )
 
-merge3 <- merge2 %>% 
-  left_join(indice_alimentacao, "nivel") %>% 
-  arrange(Indice) %>% 
+merge3 <- merge2 %>%
+  left_join(indice_alimentacao, "nivel") %>%
+  arrange(Indice) %>%
   select(c(5,1,6,4))
 
 merge3
