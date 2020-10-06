@@ -13,7 +13,15 @@ RoxygenNote: 7.1.1
 Imports: 
     magrittr,
     glue,
-    pnadc (>= 0.1.0)
+    pnadc (>= 0.1.0),
+    lodown,
+    tibble,
+    stringr,
+    readr,
+    RCurl,
+    janitor,
+    purrr,
+    readxl
 Suggests: 
     knitr,
     rmarkdown

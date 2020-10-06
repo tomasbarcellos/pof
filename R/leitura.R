@@ -16,10 +16,26 @@ ler_pof <- function(arquivo, tamanhos, nomes) {
 ler_morador <- function(ano) {
   stopifnot(ano %in% c(2003, 2009, 2018))
 
-  tamanhos <- c(2,4,1,9,2,1,2,2,1,2,2,4,3,1,1,
-                1,1,1,2,1,2,1,1,1,1,1,1,1,1,1,
-                1,1,1,1,1,2,1,1,2,1,1,2,1,1,1,
-                2,1,2,14,14,10)
+  regex_file <- stringr::regex("morador(_s)?\\.txt", ignore_case = TRUE)
+
+  files <- dir(path = glue::glue("dados/{ano}/"), recursive = TRUE,
+               full.names = TRUE)
+
+  if (ano %in% c(2003, 2009)) {
+
+    instrucoes <- files %>%
+      stringr::str_subset(stringr::fixed("leitura", ignore_case = TRUE)) %>%
+      instrucoes_sas()
+
+    return(ler_sas(files, instrucoes, regex_file))
+
+  }
+
+  tamanhos <- c(2, 4, 1, 9, 2, 1, 2, 2, 1, 2, 2, 4, 3, 1, 1,
+                1, 1, 1, 2, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                1, 1, 1, 1, 1, 2, 1, 1, 2, 1, 1, 2, 1, 1, 1,
+                2, 1, 2, 14, 14, 10)
+
   nomes <- c("UF", "ESTRATO_POF", "TIPO_SITUACAO_REG",
              "COD_UPA", "NUM_DOM", "NUM_UC",
              "COD_INFORMANTE", "V0306", "V0401",
@@ -34,8 +50,10 @@ ler_morador <- function(ano) {
              "V0425", "V0426", "V0427", "V0428",
              "V0429", "V0430", "ANOS_ESTUDO","PESO",
              "PESO_FINAL", "RENDA_TOTAL")
-  ler_pof(glue::glue("dados/{ano}/MORADOR.txt"),
-          tamanhos, nomes)
+
+  files %>%
+    stringr::str_subset(regex_file) %>%
+    ler_pof(tamanhos, nomes)
 }
 # morad <- ler_morador(2018)
 
@@ -43,6 +61,27 @@ ler_morador <- function(ano) {
 #' @export
 ler_desp_col <- function(ano) {
   stopifnot(ano %in% c(2003, 2009, 2018))
+
+  regex_file <- stringr::regex("(?<!caderneta_)despesa(_|s)(?!individual).*?\\.txt",
+                               ignore_case = TRUE)
+
+  files <- dir(path = glue::glue("dados/{ano}/"), recursive = TRUE,
+               full.names = TRUE)
+
+  if (ano %in% c(2003, 2009)) {
+    lista_regex <- files %>%
+      stringr::str_subset(regex_file) %>%
+      stringr::str_extract("(?<=//).+?$") %>%
+      purrr::map(stringr::fixed, ignore_case = TRUE)
+
+
+    instrucoes <- files %>%
+      stringr::str_subset(stringr::fixed("leitura", ignore_case = TRUE)) %>%
+      instrucoes_sas()
+
+    return(purrr::map_df(lista_regex, ~ler_sas(files, instrucoes, .x)))
+
+  }
 
   tamanhos <- c(2,4,1,9,2,1,2,2,7,2,4,10,2,2,1
                 ,10,1,12,10,10,1,1,2,14,14,10)
@@ -55,8 +94,9 @@ ler_desp_col <- function(ano) {
              "V1904_DEFLA", "COD_IMPUT_VALOR",
              "COD_IMPUT_QUANTIDADE", "FATOR_ANUALIZACAO",
              "PESO", "PESO_FINAL", "RENDA_TOTAL")
-  ler_pof(glue::glue("dados/{ano}/DESPESA_COLETIVA.txt"),
-          tamanhos, nomes)
+  files %>%
+    stringr::str_subset(regex_file) %>%
+    ler_pof(tamanhos, nomes)
 }
 # desp_col <- ler_desp_col(2018)
 
@@ -65,8 +105,23 @@ ler_desp_col <- function(ano) {
 ler_cad_col <- function(ano) {
   stopifnot(ano %in% c(2003, 2009, 2018))
 
-  tamanhos <- c(2,4,1,9,2,1,2,3,7,2,10,12,
-                10,1,2,14,14,10,9,4,5,9)
+  regex_file <- stringr::regex("caderneta_.+(_s)?\\.txt",
+                               ignore_case = TRUE)
+
+  files <- dir(path = glue::glue("dados/{ano}/"), recursive = TRUE,
+               full.names = TRUE)
+
+  if (ano %in% c(2003, 2009)) {
+
+    instrucoes <- files %>%
+      stringr::str_subset(stringr::fixed("leitura", ignore_case = TRUE)) %>%
+      instrucoes_sas()
+
+    return(ler_sas(files, instrucoes, regex_file))
+
+  }
+  tamanhos <- c(2, 4, 1, 9, 2, 1, 2, 3, 7, 2, 10, 12,
+                10, 1, 2, 14, 14, 10, 9, 4, 5, 9)
   nomes <- c("UF", "ESTRATO_POF", "TIPO_SITUACAO_REG",
              "COD_UPA", "NUM_DOM", "NUM_UC", "QUADRO",
              "SEQ", "V9001", "V9002", "V8000", "DEFLATOR",
@@ -75,8 +130,10 @@ ler_cad_col <- function(ano) {
              "RENDA_TOTAL",
              "V9005", "V9007", "V9009", "QTD_FINAL"
   )
-  ler_pof(glue::glue("dados/{ano}/CADERNETA_COLETIVA.txt"),
-          tamanhos, nomes)
+
+  files %>%
+    stringr::str_subset(regex_file) %>%
+    ler_pof(tamanhos, nomes)
 }
 # cad_col <- ler_cad_col(2018)
 
@@ -85,8 +142,24 @@ ler_cad_col <- function(ano) {
 ler_desp_ind <- function(ano) {
   stopifnot(ano %in% c(2003, 2009, 2018))
 
-  tamanhos <- c(2,4,1,9,2,1,2,2,2,7,2,10,2,
-                2,1,1,1,12,10,1,2,14,14,10)
+  regex_file <- stringr::regex("(?<!caderneta_)despesa(_individual)?(_s)?\\.txt",
+                               ignore_case = TRUE)
+
+  files <- dir(path = glue::glue("dados/{ano}/"), recursive = TRUE,
+               full.names = TRUE)
+
+  if (ano %in% c(2003, 2009)) {
+
+    instrucoes <- files %>%
+      stringr::str_subset(stringr::fixed("leitura", ignore_case = TRUE)) %>%
+      instrucoes_sas()
+
+    return(ler_sas(files, instrucoes, regex_file))
+
+  }
+
+  tamanhos <- c(2, 4, 1, 9, 2, 1, 2, 2, 2, 7, 2, 10, 2,
+                2, 1, 1, 1, 12, 10, 1, 2, 14, 14, 10)
   nomes <- c("UF", "ESTRATO_POF", "TIPO_SITUACAO_REG",
              "COD_UPA", "NUM_DOM", "NUM_UC",
              "COD_INFORMANTE", "QUADRO", "SEQ", "V9001",
@@ -95,8 +168,10 @@ ler_desp_ind <- function(ano) {
              "COD_IMPUT_VALOR", "FATOR_ANUALIZACAO",
              "PESO", "PESO_FINAL", "RENDA_TOTAL"
   )
-  ler_pof(glue::glue("dados/{ano}/DESPESA_INDIVIDUAL.txt"),
-          tamanhos, nomes)
+
+  files %>%
+    stringr::str_subset(regex_file) %>%
+    ler_pof(tamanhos, nomes)
 }
 # desp_ind <- ler_desp_ind(2018)
 
@@ -105,7 +180,27 @@ ler_desp_ind <- function(ano) {
 ler_aluguel <- function(ano) {
   stopifnot(ano %in% c(2003, 2009, 2018))
 
-  tamanhos <- c(2,4,1,9,2,1,2,7,2,10,2,2,12,10,1,2,14,14,10)
+  if (ano == 2003) {
+    stop("Alguel está em 'outros gastos' para 2003", call. = FALSE)
+  }
+
+  regex_file <- stringr::regex("aluguel.+?(_s)?\\.txt",
+                               ignore_case = TRUE)
+
+  files <- dir(path = glue::glue("dados/{ano}/"), recursive = TRUE,
+               full.names = TRUE)
+  if (ano %in% c(2003, 2009)) {
+
+    instrucoes <- files %>%
+      stringr::str_subset(stringr::fixed("leitura", ignore_case = TRUE)) %>%
+      instrucoes_sas()
+
+    return(ler_sas(files, instrucoes, regex_file))
+
+  }
+
+  tamanhos <- c(2, 4, 1, 9, 2, 1, 2, 7, 2, 10, 2,
+                2, 12, 10, 1, 2, 14, 14, 10)
   nomes <- c("UF", "ESTRATO_POF", "TIPO_SITUACAO_REG",
              "COD_UPA", "NUM_DOM", "NUM_UC", "QUADRO",
              "V9001", "V9002", "V8000", "V9010", "V9011",
@@ -114,8 +209,9 @@ ler_aluguel <- function(ano) {
              "RENDA_TOTAL"
   )
 
-  ler_pof(glue::glue("dados/{ano}/ALUGUEL_ESTIMADO.txt"),
-          tamanhos, nomes)
+  files %>%
+    stringr::str_subset(regex_file) %>%
+    ler_pof(tamanhos, nomes)
 }
 # alug <- ler_aluguel(2018)
 
@@ -123,6 +219,22 @@ ler_aluguel <- function(ano) {
 #' @export
 ler_rend_trab <- function(ano) {
   stopifnot(ano %in% c(2003, 2009, 2018))
+
+  regex_file <- stringr::regex("(?<!outros_|SAS/|de )rendim.+(_s)?\\.txt",
+                               ignore_case = TRUE)
+
+  files <- dir(path = glue::glue("dados/{ano}/"), recursive = TRUE,
+               full.names = TRUE)
+
+  if (ano %in% c(2003, 2009)) {
+
+    instrucoes <- files %>%
+      stringr::str_subset(stringr::fixed("leitura", ignore_case = TRUE)) %>%
+      instrucoes_sas()
+
+    return(ler_sas(files, instrucoes, regex_file))
+
+  }
 
   tamanhos <- c(2,4,1,9,2,1,2,2,1,1,7,1,1,1,1,1,1,7,7,7
                 ,7,2,2,3,1,12,10,10,10,10,1,1,14,14,10,4,5)
@@ -139,8 +251,9 @@ ler_rend_trab <- function(ano) {
              "RENDA_TOTAL","V53011","V53061"
   )
 
-  ler_pof(glue::glue("dados/{ano}/RENDIMENTO_TRABALHO.txt"),
-          tamanhos, nomes)
+  files %>%
+    stringr::str_subset(regex_file) %>%
+    ler_pof(tamanhos, nomes)
 }
 # trab <- ler_rend_trab(2018)
 
@@ -149,8 +262,23 @@ ler_rend_trab <- function(ano) {
 ler_rend_outros <- function(ano) {
   stopifnot(ano %in% c(2003, 2009, 2018))
 
-  tamanhos <- c(2,4,1,9,2,1,2,2,2,7,10,10,2,
-                2,12,10,10,1,1,14,14,10)
+  regex_file <- stringr::regex("outro.+(_s)?\\.txt", ignore_case = TRUE)
+
+  files <- dir(path = glue::glue("dados/{ano}/"), recursive = TRUE,
+               full.names = TRUE)
+
+  if (ano %in% c(2003, 2009)) {
+
+    instrucoes <- files %>%
+      stringr::str_subset(stringr::fixed("leitura", ignore_case = TRUE)) %>%
+      instrucoes_sas()
+
+    return(ler_sas(files, instrucoes, regex_file))
+
+  }
+
+  tamanhos <- c(2, 4, 1, 9, 2, 1, 2, 2, 2, 7, 10, 10, 2,
+                2, 12, 10, 10, 1, 1, 14, 14, 10)
   nomes <- c("UF", "ESTRATO_POF", "TIPO_SITUACAO_REG",
              "COD_UPA", "NUM_DOM", "NUM_UC",
              "COD_INFORMANTE", "QUADRO", "SEQ", "V9001",
@@ -159,8 +287,9 @@ ler_rend_outros <- function(ano) {
              "COD_IMPUT_VALOR", "FATOR_ANUALIZACAO",
              "PESO", "PESO_FINAL", "RENDA_TOTAL")
 
-  ler_pof(glue::glue("dados/{ano}/OUTROS_RENDIMENTOS.txt"),
-          tamanhos, nomes)
+  files %>%
+    stringr::str_subset(regex_file) %>%
+    ler_pof(tamanhos, nomes)
 }
 # outros <- ler_rend_outros(2018)
 
@@ -168,6 +297,21 @@ ler_rend_outros <- function(ano) {
 #' @export
 ler_domicilio <- function(ano) {
   stopifnot(ano %in% c(2003, 2009, 2018))
+
+  regex_file <- stringr::regex("domicilio(_s)?\\.txt", ignore_case = TRUE)
+
+  files <- dir(path = glue::glue("dados/{ano}/"), recursive = TRUE,
+               full.names = TRUE)
+
+  if (ano %in% c(2003, 2009)) {
+
+    instrucoes <- files %>%
+      stringr::str_subset(stringr::fixed("leitura", ignore_case = TRUE)) %>%
+      instrucoes_sas()
+
+    return(ler_sas(files, instrucoes, regex_file))
+
+  }
 
   tamanhos <- c(2,4,1,9,2,1,1,1,1,2,1,1,1,1,1,1,1,1,1,2,
                 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,14,14)
@@ -183,8 +327,9 @@ ler_domicilio <- function(ano) {
              "PESO_FINAL"
   )
 
-  ler_pof(glue::glue("dados/{ano}/DOMICILIO.txt"),
-          tamanhos, nomes)
+  files %>%
+    stringr::str_subset(regex_file) %>%
+    ler_pof(tamanhos, nomes)
 }
 
 #' Tradutores de rendimento
