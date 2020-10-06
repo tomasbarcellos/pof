@@ -20,7 +20,9 @@ criar_link <-  function(ano) {
     "{inicio}{arquivos}"
   )
 }
-
+#' Downlaod dos arquivos da POF
+#' @importFrom utils download.file
+#' @param ano Ano da pesquisa
 #' @export
 download_pof <- function(ano) {
   stopifnot(ano %in% c(2003, 2009, 2018))
@@ -32,13 +34,16 @@ download_pof <- function(ano) {
 
   if (!dir.exists(extdir)) dir.create(extdir)
   arqs <- stringr::str_extract(links, "(?<=/)\\w+\\.zip")
-  download.file(links, glue::glue("dados/{ano}/{arqs}"))
+  utils::download.file(links, glue::glue("dados/{ano}/{arqs}"))
 }
 
+#' Extrair dados da POF
+#' @importFrom utils unzip
+#' @param ano Ano da pesquisa
 #' @export
 unzip_pof <- function(ano) {
   dir(glue::glue("dados/{ano}"), full.names = TRUE) %>%
     stringr::str_subset("\\.zip$") %>%
-    lapply(unzip, exdir = glue::glue("dados/{ano}"))
+    lapply(utils::unzip, exdir = glue::glue("dados/{ano}"))
 }
 

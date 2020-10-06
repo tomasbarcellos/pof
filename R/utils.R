@@ -4,7 +4,7 @@ instrucoes_sas <- function(caminho) {
 
   readr::read_lines(caminho, locale = win1252) %>%
     stringr::str_replace_all( "\t" , " " ) %>%
-    str_subset("if reg=.* then do;", negate = TRUE) %>%
+    stringr::str_subset("if reg=.* then do;", negate = TRUE) %>%
     stringr::str_replace_all( "@;" , "") %>%
     stringr::str_replace_all( "/;" , "/") %>%
     stringr::str_subset(stringr::regex("^input$", ignore_case = TRUE),
@@ -13,7 +13,7 @@ instrucoes_sas <- function(caminho) {
                         negate = TRUE)
 }
 
-ler_sas <- function(files, intrucoes, regex) {
+ler_sas <- function(files, instrucoes, regex) {
   tf <- tempfile()
 
   writeLines(instrucoes, tf)
@@ -21,7 +21,7 @@ ler_sas <- function(files, intrucoes, regex) {
   df <- files %>%
     stringr::str_subset(regex) %>%
     lodown:::read_SAScii(
-      sas_path = tf, beginline = str_which(instrucoes, regex),
+      sas_path = tf, beginline = stringr::str_which(instrucoes, regex),
       skip_decimal_division = TRUE, sas_encoding = "latin1"
     ) %>%
     tibble::as_tibble() %>%

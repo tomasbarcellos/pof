@@ -24,7 +24,7 @@ ler_morador <- function(ano) {
   if (ano %in% c(2003, 2009)) {
 
     instrucoes <- files %>%
-      str_subset(stringr::fixed("leitura", ignore_case = TRUE)) %>%
+      stringr::str_subset(stringr::fixed("leitura", ignore_case = TRUE)) %>%
       instrucoes_sas()
 
     return(ler_sas(files, instrucoes, regex_file))
@@ -72,14 +72,14 @@ ler_desp_col <- function(ano) {
     lista_regex <- files %>%
       stringr::str_subset(regex_file) %>%
       stringr::str_extract("(?<=//).+?$") %>%
-      map(stringr::fixed, ignore_case = TRUE)
+      purrr::map(stringr::fixed, ignore_case = TRUE)
 
 
     instrucoes <- files %>%
-      str_subset(stringr::fixed("leitura", ignore_case = TRUE)) %>%
+      stringr::str_subset(stringr::fixed("leitura", ignore_case = TRUE)) %>%
       instrucoes_sas()
 
-    return(map(lista_regex, ~ler_sas(files, instrucoes, .x)))
+    return(purrr::map_df(lista_regex, ~ler_sas(files, instrucoes, .x)))
 
   }
 
@@ -95,7 +95,7 @@ ler_desp_col <- function(ano) {
              "COD_IMPUT_QUANTIDADE", "FATOR_ANUALIZACAO",
              "PESO", "PESO_FINAL", "RENDA_TOTAL")
   files %>%
-    str_subset(regex_file) %>%
+    stringr::str_subset(regex_file) %>%
     ler_pof(tamanhos, nomes)
 }
 # desp_col <- ler_desp_col(2018)
@@ -114,7 +114,7 @@ ler_cad_col <- function(ano) {
   if (ano %in% c(2003, 2009)) {
 
     instrucoes <- files %>%
-      str_subset(stringr::fixed("leitura", ignore_case = TRUE)) %>%
+      stringr::str_subset(stringr::fixed("leitura", ignore_case = TRUE)) %>%
       instrucoes_sas()
 
     return(ler_sas(files, instrucoes, regex_file))
@@ -132,7 +132,7 @@ ler_cad_col <- function(ano) {
   )
 
   files %>%
-    str_subset(regex_file) %>%
+    stringr::str_subset(regex_file) %>%
     ler_pof(tamanhos, nomes)
 }
 # cad_col <- ler_cad_col(2018)
@@ -151,7 +151,7 @@ ler_desp_ind <- function(ano) {
   if (ano %in% c(2003, 2009)) {
 
     instrucoes <- files %>%
-      str_subset(stringr::fixed("leitura", ignore_case = TRUE)) %>%
+      stringr::str_subset(stringr::fixed("leitura", ignore_case = TRUE)) %>%
       instrucoes_sas()
 
     return(ler_sas(files, instrucoes, regex_file))
@@ -170,7 +170,7 @@ ler_desp_ind <- function(ano) {
   )
 
   files %>%
-    str_subset(regex_file) %>%
+    stringr::str_subset(regex_file) %>%
     ler_pof(tamanhos, nomes)
 }
 # desp_ind <- ler_desp_ind(2018)
@@ -192,7 +192,7 @@ ler_aluguel <- function(ano) {
   if (ano %in% c(2003, 2009)) {
 
     instrucoes <- files %>%
-      str_subset(stringr::fixed("leitura", ignore_case = TRUE)) %>%
+      stringr::str_subset(stringr::fixed("leitura", ignore_case = TRUE)) %>%
       instrucoes_sas()
 
     return(ler_sas(files, instrucoes, regex_file))
@@ -210,7 +210,7 @@ ler_aluguel <- function(ano) {
   )
 
   files %>%
-    str_subset(regex_file) %>%
+    stringr::str_subset(regex_file) %>%
     ler_pof(tamanhos, nomes)
 }
 # alug <- ler_aluguel(2018)
@@ -229,7 +229,7 @@ ler_rend_trab <- function(ano) {
   if (ano %in% c(2003, 2009)) {
 
     instrucoes <- files %>%
-      str_subset(stringr::fixed("leitura", ignore_case = TRUE)) %>%
+      stringr::str_subset(stringr::fixed("leitura", ignore_case = TRUE)) %>%
       instrucoes_sas()
 
     return(ler_sas(files, instrucoes, regex_file))
@@ -252,7 +252,7 @@ ler_rend_trab <- function(ano) {
   )
 
   files %>%
-    str_subset(regex_file) %>%
+    stringr::str_subset(regex_file) %>%
     ler_pof(tamanhos, nomes)
 }
 # trab <- ler_rend_trab(2018)
@@ -270,7 +270,7 @@ ler_rend_outros <- function(ano) {
   if (ano %in% c(2003, 2009)) {
 
     instrucoes <- files %>%
-      str_subset(stringr::fixed("leitura", ignore_case = TRUE)) %>%
+      stringr::str_subset(stringr::fixed("leitura", ignore_case = TRUE)) %>%
       instrucoes_sas()
 
     return(ler_sas(files, instrucoes, regex_file))
@@ -288,7 +288,7 @@ ler_rend_outros <- function(ano) {
              "PESO", "PESO_FINAL", "RENDA_TOTAL")
 
   files %>%
-    str_subset(regex_file) %>%
+    stringr::str_subset(regex_file) %>%
     ler_pof(tamanhos, nomes)
 }
 # outros <- ler_rend_outros(2018)
@@ -306,7 +306,7 @@ ler_domicilio <- function(ano) {
   if (ano %in% c(2003, 2009)) {
 
     instrucoes <- files %>%
-      str_subset(stringr::fixed("leitura", ignore_case = TRUE)) %>%
+      stringr::str_subset(stringr::fixed("leitura", ignore_case = TRUE)) %>%
       instrucoes_sas()
 
     return(ler_sas(files, instrucoes, regex_file))
@@ -328,7 +328,7 @@ ler_domicilio <- function(ano) {
   )
 
   files %>%
-    str_subset(regex_file) %>%
+    stringr::str_subset(regex_file) %>%
     ler_pof(tamanhos, nomes)
 }
 
