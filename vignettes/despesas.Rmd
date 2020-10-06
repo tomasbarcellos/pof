@@ -20,6 +20,7 @@ library(tidyverse)
 ```
 
 ```{r despesas}
+setwd(here::here())
 alu_estimado <- ler_aluguel(2018) %>% 
   transmute( 
     V9001 = V9001, 
