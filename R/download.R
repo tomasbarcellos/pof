@@ -20,7 +20,7 @@ criar_link <-  function(ano) {
     "{inicio}{arquivos}"
   )
 }
-#' Downlaod dos arquivos da POF
+#' Download dos arquivos da POF
 #' @importFrom utils download.file
 #' @param ano Ano da pesquisa
 #' @export
