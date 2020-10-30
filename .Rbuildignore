@@ -4,3 +4,7 @@
 ^dados$
 ^doc$
 ^Meta$
+^LICENSE\.md$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$

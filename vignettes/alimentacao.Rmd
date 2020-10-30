@@ -1,0 +1,178 @@
+---
+title: "alimentacao"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{alimentacao}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(pof)
+library(tidyverse)
+```
+
+```{r alimentacao}
+setwd(here::here())
+cad_coletiva <- ler_cad_col(2018) %>%
+  mutate(codigo = round(V9001 / 100)) %>%
+  filter(codigo < 86001 | codigo > 89999) %>%
+  mutate(valor_mensal = (V8000_DEFLA*FATOR_ANUALIZACAO*PESO_FINAL)/12)
+
+desp_individual <- ler_desp_ind(2018) %>%
+  mutate(codigo = round(V9001 / 100)) %>%
+  filter(QUADRO == 24 | codigo == 41001 | codigo == 48018 |
+           codigo == 49075 | codigo == 49089) %>%
+  mutate(
+    valor_mensal = ifelse(
+      QUADRO == 24 | QUADRO == 41,
+      (V8000_DEFLA*FATOR_ANUALIZACAO*PESO_FINAL)/12,
+      (V8000_DEFLA*V9011*FATOR_ANUALIZACAO*PESO_FINAL)/12
+    )
+  )
+
+junta_ali <- bind_rows(cad_coletiva, desp_individual)
+
+morador_uc <- ler_morador(2018) %>%
+  select(UF, ESTRATO_POF, TIPO_SITUACAO_REG,
+         COD_UPA, NUM_DOM ,NUM_UC, PESO_FINAL) %>%
+  unique()
+
+# 69 milhoes de famílias
+soma_familia <- sum( morador_uc$PESO_FINAL)
+
+merge1 <- junta_ali %>%
+  left_join(ler_tradutor_alimentacao(2018), "codigo") %>%
+  filter(!is.na(valor_mensal))
+
+soma_final_0 <- merge1 %>%
+  group_by(nivel = nivel_0) %>%
+  summarise(soma = sum(valor_mensal))
+
+soma_final_1 <- merge1 %>%
+  group_by(nivel = nivel_1) %>%
+  summarise(soma = sum(valor_mensal))
+
+soma_final_2 <- merge1 %>%
+  group_by(nivel = nivel_2) %>%
+  summarise(soma = sum(valor_mensal))
+
+soma_final_3 <- merge1 %>%
+  group_by(nivel = nivel_3) %>%
+  summarise(soma = sum(valor_mensal))
+
+soma_final <- bind_rows(
+  soma_final_0 ,
+  soma_final_1 ,
+  soma_final_2 ,
+  soma_final_3
+)
+
+merge2 <- soma_final %>%
+  mutate(soma_familia = soma_familia,
+         media_mensal = round( soma / soma_familia , 2 ))
+
+# Tabela original de um xls da memoria de calculo
+indice_alimentacao <- tibble::tribble(
+  ~Indice, ~nivel,                                      ~descricao,
+        1,      0,                             "Alimentacao total",
+        2,      1,                      "Alimentação no domicílio",
+        3,    101,            "Cereais, leguminosas e oleaginosas",
+        4,   1011,                                         "Arroz",
+        5,   1012,                                        "Feijão",
+        6,   1013,                                     "Orgânicos",
+        7,   1014,                                        "Outros",
+        8,    102,                    "Farinhas, féculas e massas",
+        9,   1021,                                      "Macarrão",
+       10,   1022,                              "Farinha de trigo",
+       11,   1023,                           "Farinha de mandioca",
+       12,   1024,                                        "Outras",
+       13,    103,                           "Tubérculos e raízes",
+       14,   1031,                                "Batata inglesa",
+       15,   1032,                                       "Cenoura",
+       16,   1033,                                      "Mandioca",
+       17,   1034,                                        "Outros",
+       18,    104,                          "Açúcares e derivados",
+       19,   1041,                               "Açúcar refinado",
+       20,   1042,                                "Açúcar cristal",
+       21,   1043,                                  "Light e Diet",
+       22,   1044,                                        "Outros",
+       23,    105,                            "Legumes e verduras",
+       24,   1051,                                        "Tomate",
+       25,   1052,                                        "Cebola",
+       26,   1053,                                        "Alface",
+       27,   1054,                                        "Outros",
+       28,    106,                                        "Frutas",
+       29,   1061,                                        "Banana",
+       30,   1062,                                       "Laranja",
+       31,   1063,                                          "Maca",
+       32,   1064,                                        "Outros",
+       33,    107,                   "Carnes, vísceras e pescados",
+       34,   1071,                      "Carne de boi de primeira",
+       35,   1072,                       "Carne de boi de segunda",
+       36,   1073,                                "Carne de suíno",
+       37,   1074,              "Carnes e peixes industrializados",
+       38,   1075,                              "Pescados frescos",
+       39,   1076,                                        "Outros",
+       40,    108,                                   "Aves e ovos",
+       41,   1081,                                        "Frango",
+       42,   1082,                                "Ovo de galinha",
+       43,   1083,                                     "Orgânicos",
+       44,   1084,                                        "Outros",
+       45,    109,                            "Leites e derivados",
+       46,   1091,                                 "Leite de vaca",
+       47,   1092,                                   "Leite em pó",
+       48,   1093,                                       "Queijos",
+       49,   1094,                                  "Light e Diet",
+       50,   1095,                                     "Orgânicos",
+       51,   1096,                                        "Outros",
+       52,    110,                                   "Panificados",
+       53,   1101,                                   "Pão francês",
+       54,   1102,                                      "Biscoito",
+       55,   1103,                                  "Light e diet",
+       56,   1104,                            "Outros panificados",
+       57,    111,                              "Óleos e gorduras",
+       58,   1111,                                  "Óleo de soja",
+       59,   1112,                               "Azeite de oliva",
+       60,   1113,                                        "Outros",
+       61,    112,                            "Bebidas e infusões",
+       62,   1121,                                    "Café moído",
+       63,   1122,                                 "Refrigerantes",
+       64,   1123,           "Bebidas não alcoólicas light e diet",
+       65,   1124,                             "Cervejas e chopes",
+       66,   1125,                     "Outras bebidas alcoólicas",
+       67,   1126,                                        "Outras",
+       68,    113,                         "Enlatados e conservas",
+       69,    114,                             "Sal e condimentos",
+       70,   1141,                               "Massa de tomate",
+       71,   1142,                                      "Maionese",
+       72,   1143,                                  "Sal refinado",
+       73,   1144,                                        "Outros",
+       74,    115,                          "Alimentos preparados",
+       75,    116,                                        "Outros",
+       76,      2,                 "Alimentação fora do domicílio",
+       77,    201,                               "Almoço e jantar",
+       78,    202,           "Café, leite, café/leite e chocolate",
+       79,    203,                         "Sanduíches e salgados",
+       80,    204, "Refrigerantes e outras bebidas não alcoólicas",
+       81,    205,                                       "Lanches",
+       82,    206,  "Cervejas, chopes e outras bebidas alcoólicas",
+       83,    207,                      "Alimentação light e diet",
+       84,    208,                                        "Outras"
+  )
+
+merge3 <- merge2 %>%
+  left_join(indice_alimentacao, "nivel") %>%
+  arrange(Indice) %>%
+  select(c(5,1,6,4))
+
+merge3
+```
+

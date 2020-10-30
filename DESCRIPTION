@@ -1,19 +1,30 @@
 Package: pof
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Leitura da Pesquisa de Orçamentos Familiares (POF)
 Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
+Authors@R: person("Tomás", "de Siervi Barcellos", , "tomas.barcellos@gmail.com", 
+    role = c("aut", "cre")
+    )
+Description: Pacote para ler microdados da Pesquisa de 
+    Orçamentos Familiares (POF).
+    Até agora o pacote permite a leitura das pesquisas de 
+    2002/2003, 2008/2009 e 2017/2018.
+License: GPL-3
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.1.1
 Imports: 
     magrittr,
     glue,
-    pnadc (>= 0.1.0)
+    pnadc (>= 0.1.0),
+    lodown,
+    tibble,
+    stringr,
+    readr,
+    RCurl,
+    janitor,
+    purrr,
+    readxl
 Suggests: 
     knitr,
     rmarkdown
