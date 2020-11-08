@@ -164,7 +164,7 @@ dados %>%
   select(regiao, peso, energia_kcal:folato) %>% 
   group_by(regiao) %>% 
   summarise_at(vars(energia_kcal:folato), 
-               ~weighted.mean(.x, w = peso, na.rm = TRUE)) %>% 
+               ~round(weighted.mean(.x, w = peso, na.rm = TRUE), 2)) %>% 
   pivot_longer(-regiao, names_to = "Nutriente") %>% 
   pivot_wider(names_from = regiao, values_from = value) %>% 
   knitr::kable()

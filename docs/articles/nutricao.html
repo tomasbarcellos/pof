@@ -245,7 +245,7 @@ Alimento (refeição) tabela alimentação</li>
   <span class="fu">select</span><span class="op">(</span><span class="va">regiao</span>, <span class="va">peso</span>, <span class="va">energia_kcal</span><span class="op">:</span><span class="va">folato</span><span class="op">)</span> <span class="op">%&gt;%</span> 
   <span class="fu">group_by</span><span class="op">(</span><span class="va">regiao</span><span class="op">)</span> <span class="op">%&gt;%</span> 
   <span class="fu">summarise_at</span><span class="op">(</span><span class="fu">vars</span><span class="op">(</span><span class="va">energia_kcal</span><span class="op">:</span><span class="va">folato</span><span class="op">)</span>, 
-               <span class="op">~</span><span class="fu"><a href="https://rdrr.io/r/stats/weighted.mean.html">weighted.mean</a></span><span class="op">(</span><span class="va">.x</span>, w <span class="op">=</span> <span class="va">peso</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span> 
+               <span class="op">~</span><span class="fu"><a href="https://rdrr.io/r/base/Round.html">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/weighted.mean.html">weighted.mean</a></span><span class="op">(</span><span class="va">.x</span>, w <span class="op">=</span> <span class="va">peso</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span> 
   <span class="fu">pivot_longer</span><span class="op">(</span><span class="op">-</span><span class="va">regiao</span>, names_to <span class="op">=</span> <span class="st">"Nutriente"</span><span class="op">)</span> <span class="op">%&gt;%</span> 
   <span class="fu">pivot_wider</span><span class="op">(</span>names_from <span class="op">=</span> <span class="va">regiao</span>, values_from <span class="op">=</span> <span class="va">value</span><span class="op">)</span> <span class="op">%&gt;%</span> 
   <span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html">kable</a></span><span class="op">(</span><span class="op">)</span></pre></div>
@@ -261,235 +261,235 @@ Alimento (refeição) tabela alimentação</li>
 <tbody>
 <tr class="odd">
 <td align="left">energia_kcal</td>
-<td align="right">2.719936e+03</td>
-<td align="right">2802.618873</td>
-<td align="right">2.793712e+03</td>
-<td align="right">2987.462205</td>
-<td align="right">2788.187619</td>
+<td align="right">2719.94</td>
+<td align="right">2802.62</td>
+<td align="right">2793.71</td>
+<td align="right">2987.46</td>
+<td align="right">2788.19</td>
 </tr>
 <tr class="even">
 <td align="left">energia_kj</td>
-<td align="right">1.142054e+04</td>
-<td align="right">11783.300489</td>
-<td align="right">1.171144e+04</td>
-<td align="right">12550.402725</td>
-<td align="right">11709.794149</td>
+<td align="right">11420.54</td>
+<td align="right">11783.30</td>
+<td align="right">11711.44</td>
+<td align="right">12550.40</td>
+<td align="right">11709.79</td>
 </tr>
 <tr class="odd">
 <td align="left">ptn</td>
-<td align="right">1.293374e+02</td>
-<td align="right">131.094774</td>
-<td align="right">1.381984e+02</td>
-<td align="right">133.203897</td>
-<td align="right">125.795009</td>
+<td align="right">129.34</td>
+<td align="right">131.09</td>
+<td align="right">138.20</td>
+<td align="right">133.20</td>
+<td align="right">125.80</td>
 </tr>
 <tr class="even">
 <td align="left">chotot</td>
-<td align="right">3.496602e+02</td>
-<td align="right">403.176982</td>
-<td align="right">3.770785e+02</td>
-<td align="right">399.064843</td>
-<td align="right">376.014325</td>
+<td align="right">349.66</td>
+<td align="right">403.18</td>
+<td align="right">377.08</td>
+<td align="right">399.06</td>
+<td align="right">376.01</td>
 </tr>
 <tr class="odd">
 <td align="left">fibra</td>
-<td align="right">3.714098e+01</td>
-<td align="right">37.803574</td>
-<td align="right">3.274912e+01</td>
-<td align="right">36.178554</td>
-<td align="right">38.124537</td>
+<td align="right">37.14</td>
+<td align="right">37.80</td>
+<td align="right">32.75</td>
+<td align="right">36.18</td>
+<td align="right">38.12</td>
 </tr>
 <tr class="even">
 <td align="left">lip</td>
-<td align="right">9.442577e+01</td>
-<td align="right">81.358661</td>
-<td align="right">8.689732e+01</td>
-<td align="right">100.367088</td>
-<td align="right">93.925318</td>
+<td align="right">94.43</td>
+<td align="right">81.36</td>
+<td align="right">86.90</td>
+<td align="right">100.37</td>
+<td align="right">93.93</td>
 </tr>
 <tr class="odd">
 <td align="left">colest</td>
-<td align="right">4.108186e+02</td>
-<td align="right">407.393342</td>
-<td align="right">4.479946e+02</td>
-<td align="right">425.125881</td>
-<td align="right">370.944982</td>
+<td align="right">410.82</td>
+<td align="right">407.39</td>
+<td align="right">447.99</td>
+<td align="right">425.13</td>
+<td align="right">370.94</td>
 </tr>
 <tr class="even">
 <td align="left">agsat</td>
-<td align="right">2.964214e+01</td>
-<td align="right">27.704848</td>
-<td align="right">2.769483e+01</td>
-<td align="right">32.534879</td>
-<td align="right">29.993067</td>
+<td align="right">29.64</td>
+<td align="right">27.70</td>
+<td align="right">27.69</td>
+<td align="right">32.53</td>
+<td align="right">29.99</td>
 </tr>
 <tr class="odd">
 <td align="left">agmono</td>
-<td align="right">3.127883e+01</td>
-<td align="right">25.620561</td>
-<td align="right">2.867753e+01</td>
-<td align="right">34.055659</td>
-<td align="right">30.968652</td>
+<td align="right">31.28</td>
+<td align="right">25.62</td>
+<td align="right">28.68</td>
+<td align="right">34.06</td>
+<td align="right">30.97</td>
 </tr>
 <tr class="even">
 <td align="left">agpoli</td>
-<td align="right">2.539393e+01</td>
-<td align="right">20.167050</td>
-<td align="right">2.287893e+01</td>
-<td align="right">24.305500</td>
-<td align="right">23.915305</td>
+<td align="right">25.39</td>
+<td align="right">20.17</td>
+<td align="right">22.88</td>
+<td align="right">24.31</td>
+<td align="right">23.92</td>
 </tr>
 <tr class="odd">
 <td align="left">agtrans</td>
-<td align="right">1.658854e+00</td>
-<td align="right">1.844610</td>
-<td align="right">1.695388e+00</td>
-<td align="right">1.857850</td>
-<td align="right">1.968656</td>
+<td align="right">1.66</td>
+<td align="right">1.84</td>
+<td align="right">1.70</td>
+<td align="right">1.86</td>
+<td align="right">1.97</td>
 </tr>
 <tr class="even">
 <td align="left">calcio</td>
-<td align="right">7.443002e+02</td>
-<td align="right">747.650002</td>
-<td align="right">7.166999e+02</td>
-<td align="right">864.706268</td>
-<td align="right">860.046225</td>
+<td align="right">744.30</td>
+<td align="right">747.65</td>
+<td align="right">716.70</td>
+<td align="right">864.71</td>
+<td align="right">860.05</td>
 </tr>
 <tr class="odd">
 <td align="left">ferro</td>
-<td align="right">1.686553e+01</td>
-<td align="right">16.920141</td>
-<td align="right">1.627381e+01</td>
-<td align="right">18.477309</td>
-<td align="right">17.738051</td>
+<td align="right">16.87</td>
+<td align="right">16.92</td>
+<td align="right">16.27</td>
+<td align="right">18.48</td>
+<td align="right">17.74</td>
 </tr>
 <tr class="even">
 <td align="left">sodio</td>
-<td align="right">3.763506e+03</td>
-<td align="right">3785.659874</td>
-<td align="right">3.474253e+03</td>
-<td align="right">4166.327909</td>
-<td align="right">3947.042426</td>
+<td align="right">3763.51</td>
+<td align="right">3785.66</td>
+<td align="right">3474.25</td>
+<td align="right">4166.33</td>
+<td align="right">3947.04</td>
 </tr>
 <tr class="odd">
 <td align="left">magnesio</td>
-<td align="right">4.595506e+02</td>
-<td align="right">427.336675</td>
-<td align="right">4.252701e+02</td>
-<td align="right">519.653936</td>
-<td align="right">445.791023</td>
+<td align="right">459.55</td>
+<td align="right">427.34</td>
+<td align="right">425.27</td>
+<td align="right">519.65</td>
+<td align="right">445.79</td>
 </tr>
 <tr class="even">
 <td align="left">fosforo</td>
-<td align="right">1.567926e+03</td>
-<td align="right">1582.585061</td>
-<td align="right">1.615377e+03</td>
-<td align="right">1701.535781</td>
-<td align="right">1620.858485</td>
+<td align="right">1567.93</td>
+<td align="right">1582.59</td>
+<td align="right">1615.38</td>
+<td align="right">1701.54</td>
+<td align="right">1620.86</td>
 </tr>
 <tr class="odd">
 <td align="left">potassio</td>
-<td align="right">3.705636e+03</td>
-<td align="right">3652.675731</td>
-<td align="right">3.562129e+03</td>
-<td align="right">4358.985199</td>
-<td align="right">3951.404360</td>
+<td align="right">3705.64</td>
+<td align="right">3652.68</td>
+<td align="right">3562.13</td>
+<td align="right">4358.99</td>
+<td align="right">3951.40</td>
 </tr>
 <tr class="even">
 <td align="left">cobre</td>
-<td align="right">2.668320e+00</td>
-<td align="right">2.575720</td>
-<td align="right">2.210353e+00</td>
-<td align="right">2.545872</td>
-<td align="right">2.351230</td>
+<td align="right">2.67</td>
+<td align="right">2.58</td>
+<td align="right">2.21</td>
+<td align="right">2.55</td>
+<td align="right">2.35</td>
 </tr>
 <tr class="odd">
 <td align="left">zinco</td>
-<td align="right">1.868062e+01</td>
-<td align="right">18.188880</td>
-<td align="right">1.815016e+01</td>
-<td align="right">19.381565</td>
-<td align="right">16.625045</td>
+<td align="right">18.68</td>
+<td align="right">18.19</td>
+<td align="right">18.15</td>
+<td align="right">19.38</td>
+<td align="right">16.63</td>
 </tr>
 <tr class="even">
 <td align="left">vita_rae</td>
-<td align="right">8.934646e+02</td>
-<td align="right">977.386915</td>
-<td align="right">5.346724e+02</td>
-<td align="right">958.209198</td>
-<td align="right">743.677357</td>
+<td align="right">893.46</td>
+<td align="right">977.39</td>
+<td align="right">534.67</td>
+<td align="right">958.21</td>
+<td align="right">743.68</td>
 </tr>
 <tr class="odd">
 <td align="left">tiamina</td>
-<td align="right">1.597129e+00</td>
-<td align="right">1.432101</td>
-<td align="right">1.382062e+00</td>
-<td align="right">1.887474</td>
-<td align="right">1.646597</td>
+<td align="right">1.60</td>
+<td align="right">1.43</td>
+<td align="right">1.38</td>
+<td align="right">1.89</td>
+<td align="right">1.65</td>
 </tr>
 <tr class="even">
 <td align="left">riboflavina</td>
-<td align="right">1.767556e+00</td>
-<td align="right">1.891194</td>
-<td align="right">1.640396e+00</td>
-<td align="right">2.039864</td>
-<td align="right">1.983728</td>
+<td align="right">1.77</td>
+<td align="right">1.89</td>
+<td align="right">1.64</td>
+<td align="right">2.04</td>
+<td align="right">1.98</td>
 </tr>
 <tr class="odd">
 <td align="left">niacina</td>
-<td align="right">2.482519e+01</td>
-<td align="right">26.701834</td>
-<td align="right">2.456615e+01</td>
-<td align="right">26.286469</td>
-<td align="right">25.788844</td>
+<td align="right">24.83</td>
+<td align="right">26.70</td>
+<td align="right">24.57</td>
+<td align="right">26.29</td>
+<td align="right">25.79</td>
 </tr>
 <tr class="even">
 <td align="left">piridoxamina</td>
-<td align="right">9.578892e-01</td>
-<td align="right">1.002622</td>
-<td align="right">9.124832e-01</td>
-<td align="right">1.172815</td>
-<td align="right">1.108155</td>
+<td align="right">0.96</td>
+<td align="right">1.00</td>
+<td align="right">0.91</td>
+<td align="right">1.17</td>
+<td align="right">1.11</td>
 </tr>
 <tr class="odd">
 <td align="left">cobalamina</td>
-<td align="right">7.752459e+00</td>
-<td align="right">7.505701</td>
-<td align="right">8.899091e+00</td>
-<td align="right">7.006734</td>
-<td align="right">6.003926</td>
+<td align="right">7.75</td>
+<td align="right">7.51</td>
+<td align="right">8.90</td>
+<td align="right">7.01</td>
+<td align="right">6.00</td>
 </tr>
 <tr class="even">
 <td align="left">vitd</td>
-<td align="right">2.646578e+00</td>
-<td align="right">2.529911</td>
-<td align="right">3.213012e+00</td>
-<td align="right">2.328287</td>
-<td align="right">2.337887</td>
+<td align="right">2.65</td>
+<td align="right">2.53</td>
+<td align="right">3.21</td>
+<td align="right">2.33</td>
+<td align="right">2.34</td>
 </tr>
 <tr class="odd">
 <td align="left">vite</td>
-<td align="right">1.045586e+01</td>
-<td align="right">9.075054</td>
-<td align="right">1.305666e+01</td>
-<td align="right">11.257020</td>
-<td align="right">11.024603</td>
+<td align="right">10.46</td>
+<td align="right">9.08</td>
+<td align="right">13.06</td>
+<td align="right">11.26</td>
+<td align="right">11.02</td>
 </tr>
 <tr class="even">
 <td align="left">vitc</td>
-<td align="right">1.671166e+02</td>
-<td align="right">225.781040</td>
-<td align="right">2.396457e+02</td>
-<td align="right">237.417246</td>
-<td align="right">199.124364</td>
+<td align="right">167.12</td>
+<td align="right">225.78</td>
+<td align="right">239.65</td>
+<td align="right">237.42</td>
+<td align="right">199.12</td>
 </tr>
 <tr class="odd">
 <td align="left">folato</td>
-<td align="right">6.259966e+02</td>
-<td align="right">649.060923</td>
-<td align="right">5.321860e+02</td>
-<td align="right">718.967090</td>
-<td align="right">686.174827</td>
+<td align="right">626.00</td>
+<td align="right">649.06</td>
+<td align="right">532.19</td>
+<td align="right">718.97</td>
+<td align="right">686.17</td>
 </tr>
 </tbody>
 </table>
