@@ -1,0 +1,239 @@
+---
+title: "nutricao"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{nutricao}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  warning = FALSE,
+  message = FALSE
+)
+```
+
+## Setup
+
+```{r setup}
+library(pof)
+library(tidyverse)
+```
+
+# Análise nutrientes
+
+O objetivo dessa vinheta é realizar uma análise dos dados da POF de 2017/2018 
+sobre nutrientes consumidos pelos idosos no Brasil.
+
+Para isso vamos precisar montar uma tabela com as variáveis
+
+- [x] UF (domicílio)
+- [x] Capital/RM/resto de Estado/Rural (domicílio)
+- [x] Horário (refeição) tabela alimentação
+- [x] Renda familiar (domicílio) tabela alimentação
+- [x] Idade (pessoa)
+- [x] Sexo (pessoa)
+- [x] Cor (pessoa)
+- [x] Nutrientes (refeição) tabela alimentação
+- [x] Alimento (refeição) tabela alimentação
+
+Ha dois quadros na tabela de alimentação, ver como tratar os dois.
+
+## Leitura dos dados
+
+O peimrio passo é ler a tabela com os estratos para ter informações 
+sobre a região do estrato (capital, rural, etc)
+
+```{r}
+setwd(here::here())
+
+estratos <- readxl::read_excel("dados/2018/Documentos/Estratos POF 2017-2018.xls",
+                               skip = 6, 
+                               col_names = c("uf", "capital", "resto_rm",
+                                             "resto_uf", "rural")) %>% 
+  filter(!is.na(capital)) %>% 
+  mutate_all(str_replace, " [ae] ", ":") %>% 
+  pivot_longer(-uf, names_to = "tipo_domicilio") %>% 
+  mutate(value = ifelse(value == "-", NA, value),
+         tipo_domicilio = str_replace(tipo_domicilio, "_", " "),
+         estrato = map(value, ~eval(parse(text = .x)))) %>% 
+  unnest(estrato) %>% 
+  select(estrato, tipo_domicilio) %>% 
+  filter(!is.na(estrato))
+
+```
+
+O segundo é ler os dados de pessoas, aplicar os código usados para 
+guardas as informações qualitativas e unir as informações dos estratos.
+
+```{r}
+setwd(here::here())
+
+pessoas <- ler_morador(2018) %>% 
+  transmute(estrato = ESTRATO_POF,
+            cod_pessoa = paste0(ESTRATO_POF, COD_UPA, NUM_DOM, 
+                                NUM_UC, COD_INFORMANTE), 
+            idade = V0403, sexo = V0404, cor = V0405, 
+            renda = RENDA_TOTAL, peso = PESO_FINAL) %>% 
+  mutate(
+    cor = case_when(
+      cor == 1 ~ "Branca",
+      cor == 2 ~ "Preta",
+      cor == 3 ~ "Amarela",
+      cor == 4 ~ "Parda",
+      cor == 5 ~ "Indígena",
+      cor == 9 ~ "Sem declaração"
+    ),
+    sexo = ifelse(sexo == 1, "Homem", "Mulher")
+  ) %>% 
+  left_join(estratos, "estrato") %>% 
+  select(-estrato)
+```
+
+O terceita passo consiste em ler a tabela de alimentos e fazer algumas 
+agregações por pessoa.
+
+```{r}
+setwd(here::here())
+
+produtos <- readxl::read_excel(
+  "dados/2018/Documentos/Cadastro de Produtos do Consumo Alimentar.xls"
+  ) %>% 
+  set_names(c("codigo", "produto")) %>% 
+  mutate(codigo = as.numeric(codigo))
+
+dic <- readxl::read_excel("dados/2018/Documentos/Dicion†rios de v†riaveis.xls",
+                          "Consumo Alimentar", skip = 2) %>% 
+  filter(!is.na(Tamanho))
+
+posicoes <- as.numeric(dic$Tamanho)
+
+alimentos <- read_fwf("dados/2018/CONSUMO_ALIMENTAR.txt", 
+                  fwf_widths(posicoes)) %>% 
+  set_names(dic$`Código da variável`) %>% 
+  mutate(cod_pessoa = paste0(ESTRATO_POF, COD_UPA, NUM_DOM, 
+                             NUM_UC, COD_INFORMANTE)) %>% 
+  rename(codigo = V9001, quantidade = V9005, cod_medida = V9007, 
+         hora = V9015, cod_preparo = V9016, cod_refeicao = V9017, 
+         cod_local = V9018, gramas = QTD,
+         azeite = V9019, mantega = V9020, acucar = V9021, 
+         adocante = V9022, mel = V9023, melado = V9024, 
+         mayonese = V9025, ketchup = V9026, mostarda = V9027, 
+         shoyu = V9028, queijo_ralado = V9029, creme_leite = V9030) %>% 
+  janitor::clean_names() %>% 
+  left_join(produtos, "codigo")
+  
+alim_pessoa <- alimentos %>% 
+  group_by(cod_pessoa, produto) %>% 
+  summarise(qtd = sum(gramas), .groups = "drop") %>% 
+  pivot_wider(names_from = produto, values_from = qtd, 
+              values_fill = list(qtd = 0))
+
+nut_pessoa <- alimentos %>% 
+  group_by(cod_pessoa) %>% 
+  summarise_at(vars(azeite:creme_leite, energia_kcal:folato), 
+               sum, na.rm = TRUE)
+```
+
+Para que possamos ao fim unir as inforamações das três tabelas
+
+```{r}
+dados <- pessoas %>% 
+  right_join(alim_pessoa, "cod_pessoa") %>% 
+  left_join(nut_pessoa, "cod_pessoa")
+```
+
+# Exemplo análise
+
+## Consumo de nutrientes
+
+Digamos que queiramos saber o consumo médio dos Nutrientes
+entre idosos por macrorregião do Brasil.
+
+```{r}
+dados %>% 
+  filter(idade > 65) %>% 
+  mutate(regiao = str_sub(cod_pessoa, 1, 1) %>% 
+           as.numeric() %>% 
+           map_chr(~switch(.x, 
+             "Norte", "Nordeste", "Sul", "Sudeste", "Centro-Oeste"
+           ))) %>% 
+  select(regiao, peso, energia_kcal:folato) %>% 
+  group_by(regiao) %>% 
+  summarise_at(vars(energia_kcal:folato), 
+               ~weighted.mean(.x, w = peso, na.rm = TRUE)) %>% 
+  pivot_longer(-regiao, names_to = "Nutriente") %>% 
+  pivot_wider(names_from = regiao, values_from = value) %>% 
+  knitr::kable()
+```
+
+## Consumo de grupos alimentares
+
+Outra possibilidade de anásise é verificar a quantidade de pesacado fresco 
+comido pelos idosos nas diferentes regiões do Brasil ou de a cordo com a cor 
+de pele.
+
+Para tanto iremos utlizar um tradutor dos códigos dos produtos para 
+grupos alimentares disponibilizado pelo IBGE.
+
+```{r}
+setwd(here::here())
+
+cod_peixes <- ler_tradutor_alimentacao(2018) %>% 
+  filter(nivel_3 == 1075)
+
+alim_peixes <- alimentos %>% 
+  mutate(codigo = codigo %/% 100) %>% 
+  semi_join(cod_peixes, "codigo")
+
+pessoas_peixes <- pessoas %>% 
+  left_join(alim_peixes,"cod_pessoa")
+```
+
+Com essa tabela em mãos podemos calcular o consumo médio de peixes 
+na população como um todo:
+
+```{r}
+pessoas_peixes %>% 
+  summarise(media = weighted.mean(gramas, peso_final, na.rm = TRUE)) %>% 
+  knitr::kable()
+```
+
+Ou entre os idosos:
+
+```{r}
+pessoas_peixes %>% 
+  filter(idade > 65) %>% 
+  summarise(media = weighted.mean(gramas, peso_final, na.rm = TRUE)) %>% 
+  knitr::kable()
+```
+
+E podemos verificar as diferenças regionais e cor propostas ao início
+
+```{r}
+pessoas_peixes %>% 
+  filter(idade > 65) %>% 
+  mutate(regiao = str_sub(cod_pessoa, 1, 1) %>% 
+           as.numeric() %>% 
+           map_chr(~switch(.x, 
+             "Norte", "Nordeste", "Sul", "Sudeste", "Centro-Oeste"
+           ))) %>% 
+  group_by(regiao) %>% 
+  summarise(media = weighted.mean(gramas, peso_final, na.rm = TRUE)) %>% 
+  knitr::kable()
+
+pessoas_peixes %>% 
+  filter(idade > 65) %>% 
+  mutate(regiao = str_sub(cod_pessoa, 1, 1) %>% 
+           as.numeric() %>% 
+           map_chr(~switch(.x, 
+             "Norte", "Nordeste", "Sul", "Sudeste", "Centro-Oeste"
+           ))) %>% 
+  group_by(cor) %>% 
+  summarise(media = weighted.mean(gramas, peso_final, na.rm = TRUE)) %>% 
+  knitr::kable()
+```
+
