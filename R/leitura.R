@@ -86,8 +86,8 @@ ler_desp_col <- function(ano) {
 
   }
 
-  tamanhos <- c(2,4,1,9,2,1,2,2,7,2,4,10,2,2,1
-                ,10,1,12,10,10,1,1,2,14,14,10)
+  tamanhos <- c(2,4,1,9,2,1,2,2,7,2,4,10,2,2,1,
+                10,1,12,10,10,1,1,2,14,14,10,5)
 
   nomes <- c("UF", "ESTRATO_POF", "TIPO_SITUACAO_REG",
              "COD_UPA", "NUM_DOM", "NUM_UC", "QUADRO",
@@ -96,7 +96,7 @@ ler_desp_col <- function(ano) {
              "V1905", "DEFLATOR", "V8000_DEFLA",
              "V1904_DEFLA", "COD_IMPUT_VALOR",
              "COD_IMPUT_QUANTIDADE", "FATOR_ANUALIZACAO",
-             "PESO", "PESO_FINAL", "RENDA_TOTAL")
+             "PESO", "PESO_FINAL", "RENDA_TOTAL","V9004")
   files %>%
     stringr::str_subset(regex_file) %>%
     ler_pof(tamanhos, nomes)
