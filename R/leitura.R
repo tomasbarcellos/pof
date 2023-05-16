@@ -96,7 +96,7 @@ ler_desp_col <- function(ano) {
              "V1905", "DEFLATOR", "V8000_DEFLA",
              "V1904_DEFLA", "COD_IMPUT_VALOR",
              "COD_IMPUT_QUANTIDADE", "FATOR_ANUALIZACAO",
-             "PESO", "PESO_FINAL", "RENDA_TOTAL","V9004")
+             "PESO", "PESO_FINAL", "RENDA_TOTAL", "V9004")
   files %>%
     stringr::str_subset(regex_file) %>%
     ler_pof(tamanhos, nomes)
@@ -123,16 +123,16 @@ ler_cad_col <- function(ano) {
     return(ler_sas(files, instrucoes, regex_file))
 
   }
-  tamanhos <- c(2, 4, 1, 9, 2, 1, 2, 3, 7, 2, 10, 12,
-                10, 1, 2, 14, 14, 10, 9, 4, 5, 9)
+  tamanhos <- c(2,4,1,9,2,1,2,3,7,2,10,12,10,1,2,14,14,10,
+                9,4,5,9,5)
+                        
   nomes <- c("UF", "ESTRATO_POF", "TIPO_SITUACAO_REG",
-             "COD_UPA", "NUM_DOM", "NUM_UC", "QUADRO",
-             "SEQ", "V9001", "V9002", "V8000", "DEFLATOR",
-             "V8000_DEFLA", "COD_IMPUT_VALOR",
-             "FATOR_ANUALIZACAO", "PESO", "PESO_FINAL",
-             "RENDA_TOTAL",
-             "V9005", "V9007", "V9009", "QTD_FINAL"
-  )
+                           "COD_UPA", "NUM_DOM", "NUM_UC", "QUADRO",
+                           "SEQ", "V9001", "V9002", "V8000", "DEFLATOR",
+                           "V8000_DEFLA", "COD_IMPUT_VALOR",
+                           "FATOR_ANUALIZACAO", "PESO", "PESO_FINAL",
+                           "RENDA_TOTAL",
+                           "V9005", "V9007", "V9009", "QTD_FINAL", "V9004")
 
   files %>%
     stringr::str_subset(regex_file) %>%
